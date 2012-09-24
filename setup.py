@@ -36,6 +36,7 @@ setup(
                         'httplib2',
                         'PubSubHubbub_Publisher',
                         'routes',
-                        'WebOb'],
+                        'WebOb',
+                        'daemon'],
     zip_safe=False
 )
