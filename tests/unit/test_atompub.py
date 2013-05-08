@@ -14,6 +14,15 @@ class MockResponse(object):
         self.status = status_code
 
 
+class MockMessage(object):
+    def __init__(self, payload):
+        self.payload = payload
+        self.acknowledged = False
+
+    def ack(self):
+        self.acknowledged = True
+
+
 class AtomPubTests(unittest.TestCase):
     """Tests to ensure the ATOM Pub code holds together as expected"""
 
@@ -63,12 +72,9 @@ class AtomPubTests(unittest.TestCase):
         self.stubs.UnsetAll()
 
     def test_notify(self):
-        messages = [{'event_type': 'instance_create',
+        messages = [MockMessage({'event_type': 'instance_create',
                     'message_id': 1,
-                    'content': dict(a=3)}]
-
-        def gen():
-            return messages
+                    'content': dict(a=3)})]
 
         self.called = False
 
@@ -77,22 +83,19 @@ class AtomPubTests(unittest.TestCase):
             return MockResponse(201), None
 
         self.stubs.Set(httplib2.Http, 'request', mock_request)
-        self.handler.handle_messages(gen)
+        self.handler.handle_messages(messages, dict())
         self.assertEqual(self.called, True)
 
     def test_notify_fails(self):
-        messages = [{'event_type': 'instance_create',
-                     'message_id': 1,
-                     'content': dict(a=3)}]
+        messages = [MockMessage({'event_type': 'instance_create',
+                    'message_id': 1,
+                    'content': dict(a=3)})]
         self.called = False
 
         def mock_request(*args, **kwargs):
             self.called = True
             return MockResponse(404), None
 
-        def gen():
-            return messages
-
         self.stubs.Set(httplib2.Http, 'request', mock_request)
-        self.handler.handle_messages(gen)
+        self.handler.handle_messages(messages, dict())
         self.assertEqual(self.called, True)

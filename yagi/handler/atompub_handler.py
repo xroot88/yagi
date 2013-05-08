@@ -20,7 +20,11 @@ LOG = yagi.log.logger
 
 
 class MessageDeliveryFailed(Exception):
-    pass
+    def __init__(self, msg, code, *args):
+        self.code = code
+        self.msg = msg
+        args = (msg, code) + args
+        super(MessageDeliveryFailed, self).__init__(*args)
 
 
 class UnauthorizedException(Exception):
@@ -29,6 +33,7 @@ class UnauthorizedException(Exception):
 
 class AtomPub(yagi.handler.BaseHandler):
     CONFIG_SECTION = "atompub"
+    AUTO_ACK = True
 
     def _send_notification(self, endpoint, puburl, headers, body, conn):
         LOG.debug("Sending message to %s with body: %s" % (endpoint, body))
@@ -42,7 +47,8 @@ class AtomPub(yagi.handler.BaseHandler):
             if resp.status != 201:
                 msg = ("AtomPub resource create failed for %s Status: "
                             "%s, %s" % (puburl, resp.status, content))
-                raise Exception(msg)
+                raise MessageDeliveryFailed(msg, resp.status)
+            return resp.status
         except http_util.ResponseTooLargeError, e:
             if e.response.status == 201:
                 # Was successfully created. Reply was just too large.
@@ -50,10 +56,15 @@ class AtomPub(yagi.handler.BaseHandler):
                 LOG.error("Response too large on successful post")
                 LOG.exception(e)
             else:
-                raise
+                msg = ("AtomPub resource create failed for %s. "
+                       "Also, response was too large." % puburl )
+                raise MessageDeliveryFailed(msg, e.response.status)
+        except MessageDeliveryFailed, e:
+            #catch and reraise to prevent Exception block from catching these.
+            raise
         except Exception, e:
             msg = ("AtomPub Delivery Failed to %s with:\n%s" % (endpoint, e))
-            raise MessageDeliveryFailed(msg)
+            raise MessageDeliveryFailed(msg, 0)
 
     def new_http_connection(self, force=False):
         ssl_check = not (self.config_get("validate_ssl") == "True")
@@ -75,22 +86,29 @@ class AtomPub(yagi.handler.BaseHandler):
             raise Exception("Invalid auth or no auth supplied")
         return conn, headers
 
-    def handle_messages(self, message_generator):
+    def handle_messages(self, messages, env):
         retries = int(self.config_get("retries"))
         interval = int(self.config_get("interval"))
         max_wait = int(self.config_get("max_wait"))
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
         conn, headers = self.new_http_connection()
+        results = env.setdefault('atompub.results', dict())
 
-        for payload in message_generator():
+        for payload in self.iterate_payloads(messages, env):
+            msgid = payload["message_id"]
+            code = 0
+            error = False
+            message = ''
             try:
                 entity = dict(content=payload,
                               id=payload["message_id"],
                               event_type=payload["event_type"])
                 payload_body = yagi.serializer.atom.dump_item(entity)
             except KeyError, e:
-                LOG.error("Malformed Notification: %s" % payload)
+                error_msg = "Malformed Notification: %s" % payload
+                LOG.error(error_msg)
                 LOG.exception(e)
+                results[msgid] = dict(error=True, code=0, message=error_msg)
                 continue
 
             endpoint = self.config_get("url")
@@ -98,8 +116,12 @@ class AtomPub(yagi.handler.BaseHandler):
             failures = 0
             while True:
                 try:
-                    self._send_notification(endpoint, endpoint, headers,
-                                            payload_body, conn)
+                    code = self._send_notification(endpoint, endpoint,
+                                                   headers,
+                                                   payload_body,
+                                                   conn)
+                    error = False
+                    msg = ''
                     break
                 except MessageDeliveryFailed, e:
                     stats.increment_stat(yagi.stats.failure_message())
@@ -116,6 +138,8 @@ class AtomPub(yagi.handler.BaseHandler):
                     if retries > 0:
                         tries += 1
                         if tries >= retries:
+                            error_msg = "Exceeded retry limit. Error %s" % e.msg
+                            results[msgid] = dict(error=False, code=e.code, message=error_msg)
                             break
                     wait = min(tries * interval, max_wait)
                     LOG.error("Message delivery failed, going to sleep, will "
@@ -130,3 +154,7 @@ class AtomPub(yagi.handler.BaseHandler):
                 except UnauthorizedException:
                     LOG.exception(e)
                     conn, headers = self.new_http_connection(force=True)
+
+            results[msgid] = dict(error=False, code=code, message="Success")
+
+
