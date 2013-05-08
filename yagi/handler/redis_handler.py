@@ -10,10 +10,10 @@ event_attributes = ['message_id', 'publisher_id', 'event_type', 'priority',
 
 class RedisHandler(yagi.handler.BaseHandler):
 
-    def handle_messages(self, messages):
+    def handle_messages(self, messages, env):
         db = yagi.persistence.persistence_driver()
-        for message in messages:
-            self._persist_event(db, message)
+        for payload in self.iterate_payloads(messages, env):
+            self._persist_event(db, payload)
 
     def _persist_event(self, db, message_body):
         """Stores an incoming event in the database
