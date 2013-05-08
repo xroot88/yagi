@@ -7,6 +7,7 @@ LOG = yagi.log.logger
 
 class BaseHandler(object):
     CONFIG_SECTION = "DEFAULT"
+    AUTO_ACK = False
 
     def __init__(self, app=None, queue_name=None):
         self.app = app
@@ -30,12 +31,26 @@ class BaseHandler(object):
             val = method(self.CONFIG_SECTION, key, default=default)
         return val
 
-    def __call__(self, messages):
-        result = None
+    def __call__(self, messages, env=None):
+        if env is None:
+            env = dict()
         if self.app:
-            result = self.app(messages)
-        self.handle_messages(messages)
-        return result
+            self.app(messages, env=env)
+        self.handle_messages(messages, env=env)
+        return env
 
-    def handle_messages(self, messages):
+    def filter_payload(self, payload, env):
+        filters = env.get('yagi.filters')
+        if filters:
+            for f in filters:
+                payload = f(payload)
+        return payload
+
+    def iterate_payloads(self, messages, env):
+        for message in messages:
+            yield self.filter_payload(message.payload, env)
+            if self.AUTO_ACK and not message.acknowledged:
+                message.ack()
+
+    def handle_messages(self, messages, env):
         raise NotImplementedError()

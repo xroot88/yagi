@@ -14,6 +14,7 @@ LOG = yagi.log.logger
 
 class PubSubHubBubHandler(yagi.handler.BaseHandler):
     CONFIG_SECTION = "hub"
+    AUTO_ACK = True
 
     def _topic_url(self, key):
         host = yagi.config.get('event_feed', 'feed_host') or '127.0.0.1'
@@ -30,12 +31,11 @@ class PubSubHubBubHandler(yagi.handler.BaseHandler):
         scheme = 'https' if self.config_getbool('use_https') else 'http'
         return "%s://%s:%s" % (scheme, host, port)
 
-    def _notify(self, notifications):
+    def handle_messages(self, messages, env):
         host = self._hub_url()
         topics = {}
         # Compile the list of updated topic urls
-        for notification in notifications:
-            payload = notification.payload
+        for payload in self.iterate_payloads(messages, env):
             try:
                 event_type = payload['event_type']
                 if not event_type in topics:
@@ -48,6 +48,5 @@ class PubSubHubBubHandler(yagi.handler.BaseHandler):
             try:
                 LOG.info('Publishing topic %s to %s' % (topic, host))
                 pubsubhubbub_publish.publish(host, topic)
-                notification.ack()
             except pubsubhubbub_publish.PublishError, e:
                 LOG.exception('Publish failed:\n%s' % e)

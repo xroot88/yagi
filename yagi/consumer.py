@@ -41,18 +41,13 @@ class Consumer(object):
         self.consumer = consumer
 
     def fetched_messages(self, messages):
-        def next_message():
-            for message in messages:
-                self.message = message
-                payload = message.payload
-                for f in self.filters:
-                    payload = f(payload)
-                yield payload
-                message.ack()
-
+        if self.filters:
+            env = {'yagi.filters': self.filters}
+        else:
+            env = {}
         try:
             start_time = time.time()
-            self.app(next_message)
+            self.app(messages, env=env)
             yagi.stats.time_stat(yagi.stats.elapsed_message(),
                                  time.time() - start_time)
         except Exception, e:
