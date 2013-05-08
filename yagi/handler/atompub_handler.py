@@ -32,7 +32,7 @@ class AtomPub(yagi.handler.BaseHandler):
 
     def _send_notification(self, endpoint, puburl, headers, body, conn):
         LOG.debug("Sending message to %s with body: %s" % (endpoint, body))
-        headers = {"Content-Type": "application/atom+xml"}
+        headers["Content-Type"] = "application/atom+xml"
         try:
             resp, content = conn.request(endpoint, "POST",
                                          body=body,
