@@ -43,7 +43,7 @@ class AtomPub(yagi.handler.BaseHandler):
                                          body=body,
                                          headers=headers)
             if resp.status == 401:
-                raise UnauthorizedException()
+                raise UnauthorizedException("Unauthorized or token expired")
             if resp.status != 201:
                 msg = ("AtomPub resource create failed for %s Status: "
                             "%s, %s" % (puburl, resp.status, content))
@@ -59,12 +59,6 @@ class AtomPub(yagi.handler.BaseHandler):
                 msg = ("AtomPub resource create failed for %s. "
                        "Also, response was too large." % puburl )
                 raise MessageDeliveryFailed(msg, e.response.status)
-        except MessageDeliveryFailed, e:
-            #catch and reraise to prevent Exception block from catching these.
-            raise
-        except Exception, e:
-            msg = ("AtomPub Delivery Failed to %s with:\n%s" % (endpoint, e))
-            raise MessageDeliveryFailed(msg, 0)
 
     def new_http_connection(self, force=False):
         ssl_check = not (self.config_get("validate_ssl") == "True")
@@ -96,9 +90,6 @@ class AtomPub(yagi.handler.BaseHandler):
 
         for payload in self.iterate_payloads(messages, env):
             msgid = payload["message_id"]
-            code = 0
-            error = False
-            message = ''
             try:
                 entity = dict(content=payload,
                               id=payload["message_id"],
@@ -114,6 +105,9 @@ class AtomPub(yagi.handler.BaseHandler):
             endpoint = self.config_get("url")
             tries = 0
             failures = 0
+            code = 0
+            error_msg = ''
+
             while True:
                 try:
                     code = self._send_notification(endpoint, endpoint,
@@ -123,36 +117,46 @@ class AtomPub(yagi.handler.BaseHandler):
                     error = False
                     msg = ''
                     break
+                except UnauthorizedException, e:
+                    LOG.exception(e)
+                    conn = None
+                    code = 401
+                    error_msg = "Unauthorized"
                 except MessageDeliveryFailed, e:
-                    stats.increment_stat(yagi.stats.failure_message())
+                    LOG.exception(e)
+                    code = e.code
+                    error_msg = e.msg
+                except Exception, e:
+                    code = 0 #aka 'unknown failure'
+                    error_msg = "AtomPub General Delivery Failure to %s with: %s" % (endpoint, e)
+                    LOG.error(error_msg)
                     LOG.exception(e)
 
-                    # Number of overall tries
-                    tries += 1
+                #If we got here, something failed.
+                stats.increment_stat(yagi.stats.failure_message())
+                # Number of overall tries
+                tries += 1
+                # Number of tries between re-auth attempts
+                failures += 1
 
-                    # Number of tries between re-auth attempts
-                    failures += 1
+                # Used primarily for testing, but it's possible we don't
+                # care if we lose messages?
+                if retries > 0:
+                    if tries >= retries:
+                        msg = "Exceeded retry limit. Error %s" % error_msg
+                        results[msgid] = dict(error=False, code=code, message=msg)
+                        break
+                wait = min(tries * interval, max_wait)
+                LOG.error("Message delivery failed, going to sleep, will "
+                         "try again in %s seconds" % str(wait))
+                time.sleep(wait)
 
-                    # Used primarily for testing, but it's possible we don't
-                    # care if we lose messages?
-                    if retries > 0:
-                        tries += 1
-                        if tries >= retries:
-                            error_msg = "Exceeded retry limit. Error %s" % e.msg
-                            results[msgid] = dict(error=False, code=e.code, message=error_msg)
-                            break
-                    wait = min(tries * interval, max_wait)
-                    LOG.error("Message delivery failed, going to sleep, will "
-                             "try again in %s seconds" % str(wait))
-                    time.sleep(wait)
-
-                    if failures >= failures_before_reauth:
-                        # Don't always try to reconnect, give it a few
-                        # tries first
-                        failures = 0
-                        conn, headers = self.new_http_connection(force=True)
-                except UnauthorizedException:
-                    LOG.exception(e)
+                if failures >= failures_before_reauth:
+                    # Don't always try to reconnect, give it a few
+                    # tries first
+                    failures = 0
+                    conn = None
+                if conn is None:
                     conn, headers = self.new_http_connection(force=True)
 
             results[msgid] = dict(error=False, code=code, message="Success")

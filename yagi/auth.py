@@ -25,7 +25,7 @@ def http_basic_auth(conn, headers, force=False):
 
 def rax_auth(conn, headers, force=False):
     global token
-    if token:
+    if token and not force:
         return token
     user = yagi.config.get("handler_auth", "user")
     key = yagi.config.get("handler_auth", "key")
@@ -57,7 +57,7 @@ def rax_auth(conn, headers, force=False):
 
 def rax_auth_v2(conn, headers, force=False):
     global token
-    if token:
+    if token and not force:
         return token
     user = yagi.config.get("handler_auth", "user")
     key = yagi.config.get("handler_auth", "key")
