@@ -21,6 +21,7 @@ with conf.defaults_for("rabbit_broker") as default:
     default("poll_delay", 1)
     default("reconnect_delay", 5)
     default("max_wait", 600)
+    default("max_connection_age", 0)
 
 LOG = yagi.log.logger
 
@@ -99,24 +100,14 @@ class Broker(object):
         reconnect_delay = int(config("reconnect_delay"))
         max_wait = int(config("max_wait"))
 
-        # try a few times to connect, we might have lost the connection
-        retries = 0
-        while True:
-            try:
-                connection = BrokerConnection(
-                                hostname=config("host"),
-                                port=config("port"),
-                                userid=config("user"),
-                                password=config("password"),
-                                virtual_host=config("vhost"))
-                break
-            except socket.error, e:
-                delay = reconnect_delay * retries
-                if delay > max_wait:
-                    delay = max_wait
-                retries += 1
-                LOG.error("Could not reconnect, trying again in %d" % delay)
-                time.sleep(delay)
+        # This just sets the connection string. It doesn't actually
+        # connect to the AMQP server yet.
+        connection = BrokerConnection(
+                        hostname=config("host"),
+                        port=config("port"),
+                        userid=config("user"),
+                        password=config("password"),
+                        virtual_host=config("vhost"))
 
         auto_delete = consumer.config("auto_delete") == "True" or False
         durable = consumer.config("durable") == "True" or False
@@ -124,29 +115,44 @@ class Broker(object):
         exdurable = confbool(consumer.config("exchange_durable"))
         exauto_delete = confbool(consumer.config("exchange_auto_delete"))
 
-        try:
-            carrot_consumer = NotQuiteSoStupidConsumer(
-                    connection=connection,
-                    warn_if_exists=True,
-                    exchange=consumer.config("exchange"),
-                    exchange_type=consumer.config("exchange_type"),
-                    routing_key=consumer.config("routing_key"),
-                    queue=consumer.queue_name,
-                    auto_delete=auto_delete,
-                    durable=durable,
-                    exchange_durable=exdurable,
-                    exchange_auto_delete=exauto_delete,
-                    )
-            consumer.connect(connection, carrot_consumer)
-            LOG.info("Connection established for %s" % consumer.queue_name)
-        except amqplib.client_0_8.exceptions.AMQPConnectionException, e:
-            LOG.error("Bad parameters for queue %s" % consumer.queue_name)
-            LOG.exception(e)
-            raise e
+        # try a few times to connect, we might have lost the connection
+        retries = 0
+        while True:
+            try:
+                carrot_consumer = NotQuiteSoStupidConsumer(
+                        connection=connection,
+                        warn_if_exists=True,
+                        exchange=consumer.config("exchange"),
+                        exchange_type=consumer.config("exchange_type"),
+                        routing_key=consumer.config("routing_key"),
+                        queue=consumer.queue_name,
+                        auto_delete=auto_delete,
+                        durable=durable,
+                        exchange_durable=exdurable,
+                        exchange_auto_delete=exauto_delete,
+                        )
+                consumer.connect(connection, carrot_consumer)
+                LOG.info("Connection established for %s" % consumer.queue_name)
+                break
+            except amqplib.client_0_8.exceptions.AMQPConnectionException, e:
+                LOG.error("AMQP protocol error connecting to for queue %s" %
+                           consumer.queue_name)
+                LOG.exception(e)
+            except socket.error, e:
+                # lost connection?
+                pass
+            delay = reconnect_delay * retries
+            if delay > max_wait:
+                delay = max_wait
+            retries += 1
+            LOG.error("Could not reconnect, trying again in %d" % delay)
+            time.sleep(delay)
 
     def loop(self):
         poll_delay = float(conf.get("rabbit_broker", "poll_delay"))
         update_timer = int(conf.get("global", "update_timer"))
+        max_connection_age = int(conf.get("rabbit_broker",
+                                          "max_connection_age"))
         start_time = datetime.datetime.now()
         messages_sent = {}
         while True:
@@ -168,6 +174,15 @@ class Broker(object):
                     if num_messages > 0:
                         consumer.fetched_messages(messages)
                         messages_sent[consumer.queue_name] += num_messages
+                    if max_connection_age > 0:
+                        age = datetime.datetime.now() - consumer.connect_time
+                        age_sec = age.seconds + (age.days * 86400)
+                        if age_sec > max_connection_age:
+                            LOG.info("Maximum AMQP connection time for "
+                                     "connection to %s reached. "
+                                     "Reconnecting..." % consumer.queue_name)
+                            self.establish_consumer_connection(consumer)
+
 
                 # Ingnoring microseconds because we're not going to let you
                 # be that granular and it's not super useful anyway
