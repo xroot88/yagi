@@ -1,3 +1,4 @@
+import datetime
 import time
 
 import yagi.config
@@ -14,6 +15,9 @@ class Consumer(object):
         self.filters = []
         self.queue_name = queue_name
         self.config = yagi.config.config_with("consumer:%s" % queue_name)
+        self.connect_time = None
+        self.connection = None
+        self.consumer = None
         apps = [a.strip() for a in self.config("apps").split(",")]
         prev_app = None
         for a in apps:
@@ -37,8 +41,20 @@ class Consumer(object):
                 self.filters.append(filter_class)
 
     def connect(self, connection, consumer):
+        self.disconnect()
         self.connection = connection
         self.consumer = consumer
+        self.connect_time = datetime.datetime.now()
+
+    def disconnect(self):
+        if self.connection:
+            try:
+                self.connection.close()
+            except Exception, e:
+                LOG.info("Error closing broker connection")
+                LOG.exception(e)
+        self.connection = None
+        self.consumer = None
 
     def fetched_messages(self, messages):
         if self.filters:
