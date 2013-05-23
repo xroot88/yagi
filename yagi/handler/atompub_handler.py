@@ -44,6 +44,9 @@ class AtomPub(yagi.handler.BaseHandler):
                                          headers=headers)
             if resp.status == 401:
                 raise UnauthorizedException("Unauthorized or token expired")
+            if resp.status == 409:
+                #message id already exists. this is a dup, don't resend.
+                return resp.status
             if resp.status != 201:
                 msg = ("AtomPub resource create failed for %s Status: "
                             "%s, %s" % (puburl, resp.status, content))
