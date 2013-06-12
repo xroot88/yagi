@@ -13,6 +13,7 @@ from yagi.handler.stacktach_ping_handler import StackTachPing
 class MockResponse(object):
     def __init__(self, status_code=200):
         self.status_code = status_code
+        self.text = "Ka-Splat!!"
 
 
 class MockMessage(object):
@@ -70,7 +71,7 @@ class StackTachPingTests(unittest.TestCase):
         self.called = False
         self.data = None
 
-        def mock_post(url, data=None, **kw):
+        def mock_put(url, data=None, **kw):
             self.called = True
             self.data = data
             return MockResponse(201)
@@ -79,7 +80,7 @@ class StackTachPingTests(unittest.TestCase):
                       {'1' : dict(code=201, error=False, message="yay"),
                        '2' : dict(code=404, error=False, message="boo")}}
 
-        self.stubs.Set(requests, 'post', mock_post)
+        self.stubs.Set(requests, 'put', mock_put)
         self.stubs.Set(requests.codes, 'ok', 201)
 
         self.handler.handle_messages(messages, mock_env)
@@ -103,7 +104,7 @@ class StackTachPingTests(unittest.TestCase):
         self.called = False
         self.data = None
 
-        def mock_post(url, data=None, **kw):
+        def mock_put(url, data=None, **kw):
             self.called = True
             self.data = data
             return MockResponse(500)
@@ -112,7 +113,7 @@ class StackTachPingTests(unittest.TestCase):
                       {'1' : dict(code=201, error=False, message="yay"),
                        '2' : dict(code=404, error=False, message="boo")}}
 
-        self.stubs.Set(requests, 'post', mock_post)
+        self.stubs.Set(requests, 'put', mock_put)
         self.stubs.Set(requests.codes, 'ok', 201)
 
         self.handler.handle_messages(messages, mock_env)
