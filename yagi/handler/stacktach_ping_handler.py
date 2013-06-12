@@ -33,8 +33,6 @@ class StackTachPing(yagi.handler.BaseHandler):
             ping[msgid] = code
         url =  self.config_get("url")
         status = self._post_to_st(url, ping)
-        if not self._check_return(status):
-            LOG.error("Error posting to StackTach: %s" % status)
 
     def _check_return(self, status):
         return status == requests.codes.ok
@@ -43,8 +41,13 @@ class StackTachPing(yagi.handler.BaseHandler):
         timeout =  int(self.config_get("timeout"))
         data = json.dumps(dict(messages=ping))
         try:
-            res = requests.post(url, data=data, timeout=timeout)
+            res = requests.put(url, data=data,
+                               timeout=timeout,
+                               allow_redirects=True)
         except requests.exceptions.Timeout:
             LOG.error("Timeout pinging stacktach")
+        if not self._check_return(res.status_code):
+            LOG.error("Error posting to StackTach: %s" % res.status_code)
+            LOG.error("Error message from StackTach: %s" % res.text)
         return res.status_code
 

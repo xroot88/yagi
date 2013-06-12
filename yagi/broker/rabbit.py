@@ -21,7 +21,7 @@ with conf.defaults_for("rabbit_broker") as default:
     default("poll_delay", 1)
     default("reconnect_delay", 5)
     default("max_wait", 600)
-    default("max_connection_age", 0)
+    default("max_connection_age", 14400)
 
 LOG = yagi.log.logger
 
