@@ -1,4 +1,5 @@
 from django.utils import unittest
+from django.utils import unittest
 import httplib2
 from yagi import http_util
 from tests.unit.test_cufpub import MockMessage, MockResponse
@@ -78,7 +79,7 @@ class HttpConnectionTests(unittest.TestCase):
         endpoint = handler.config_get("url")
         payload_body = {"a":"b"}
         self.stubs.Set(httplib2.Http, 'request', mock_request)
-        http_conn.send_notification(endpoint,endpoint,payload_body)
+        http_conn.send_notification(endpoint, endpoint, payload_body)
 
     def test_response_401_raises_unauthorized_exception(self):
         self.called = False
@@ -117,7 +118,8 @@ class HttpConnectionTests(unittest.TestCase):
 
         def mock_request(*args, **kwargs):
             self.called = True
-            raise http_util.ResponseTooLargeError("desc",MockResponse(0),"content")
+            raise http_util.ResponseTooLargeError("desc",MockResponse(0),
+                                                  "content")
 
         handler = CufPub()
         http_conn = HttpConnection(handler)
@@ -125,7 +127,7 @@ class HttpConnectionTests(unittest.TestCase):
         payload_body = {"a":"b"}
         self.stubs.Set(httplib2.Http, 'request', mock_request)
 
-        self.assertRaises(MessageDeliveryFailed,http_conn.send_notification,
+        self.assertRaises(MessageDeliveryFailed, http_conn.send_notification,
                           endpoint, endpoint, payload_body)
 
     def test_response_too_large_error_and_status_is_201_does_not_raise_exception(self):
@@ -143,5 +145,22 @@ class HttpConnectionTests(unittest.TestCase):
         self.stubs.Set(httplib2.Http, 'request', mock_request)
 
         http_conn.send_notification(endpoint, endpoint, payload_body)
+
+    def test_duplicate_entry_to_atomhopper_response_409(self):
+        self.called = False
+
+        def mock_request(*args, **kwargs):
+            self.called = True
+            return MockResponse(409), None
+
+        handler = CufPub()
+        http_conn = HttpConnection(handler)
+        endpoint = handler.config_get("url")
+        payload_body = {"a":"b"}
+        self.stubs.Set(httplib2.Http, 'request', mock_request)
+
+        status = http_conn.send_notification(endpoint, endpoint, payload_body)
+        self.assertEqual(status,409)
+
 
 

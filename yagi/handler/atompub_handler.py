@@ -3,10 +3,12 @@ import time
 import yagi.auth
 import yagi.config
 import yagi.handler
+from yagi.handler.http_connection import HttpConnection
+from yagi.handler.http_connection import MessageDeliveryFailed
+from yagi.handler.http_connection import UnauthorizedException
 import yagi.log
 import yagi.serializer.atom
 from yagi import stats
-from yagi import http_util
 
 with yagi.config.defaults_for("atompub") as default:
     default("validate_ssl", "False")
@@ -20,69 +22,9 @@ with yagi.config.defaults_for("atompub") as default:
 LOG = yagi.log.logger
 
 
-class MessageDeliveryFailed(Exception):
-    def __init__(self, msg, code, *args):
-        self.code = code
-        self.msg = msg
-        args = (msg, code) + args
-        super(MessageDeliveryFailed, self).__init__(*args)
-
-
-class UnauthorizedException(Exception):
-    pass
-
-
 class AtomPub(yagi.handler.BaseHandler):
     CONFIG_SECTION = "atompub"
     AUTO_ACK = True
-
-    def _send_notification(self, endpoint, puburl, headers, body, conn):
-        LOG.debug("Sending message to %s with body: %s" % (endpoint, body))
-        headers["Content-Type"] = "application/atom+xml"
-        try:
-            resp, content = conn.request(endpoint, "POST",
-                                         body=body,
-                                         headers=headers)
-            if resp.status == 401:
-                raise UnauthorizedException("Unauthorized or token expired")
-            if resp.status == 409:
-                #message id already exists. this is a dup, don't resend.
-                return resp.status
-            if resp.status != 201:
-                msg = ("AtomPub resource create failed for %s Status: "
-                            "%s, %s" % (puburl, resp.status, content))
-                raise MessageDeliveryFailed(msg, resp.status)
-            return resp.status
-        except http_util.ResponseTooLargeError, e:
-            if e.response.status == 201:
-                # Was successfully created. Reply was just too large.
-                # Note that we DON'T want to retry this if we've gotten a 201.
-                LOG.error("Response too large on successful post")
-                LOG.exception(e)
-            else:
-                msg = ("AtomPub resource create failed for %s. "
-                       "Also, response was too large." % puburl )
-                raise MessageDeliveryFailed(msg, e.response.status)
-
-    def new_http_connection(self, force=False):
-        ssl_check = not (self.config_get("validate_ssl") == "True")
-        conn = http_util.LimitingBodyHttp(
-                        disable_ssl_certificate_validation=ssl_check)
-        auth_method = yagi.auth.get_auth_method()
-        headers = {}
-        if auth_method:
-            try:
-                auth_method(conn, headers, force=force)
-            except Exception, e:
-                # Auth could be jacked for some reason, slow down on failing.
-                # Alternatively, if we have bad credentials, don't fill
-                # up the logs crying about it.
-                LOG.exception(e)
-                interval = int(self.config_get("interval"))
-                time.sleep(interval)
-        else:
-            raise Exception("Invalid auth or no auth supplied")
-        return conn, headers
 
     def note_result(self, env, payload, code=0, error=False, message=None):
         name = self.__class__.__name__.lower() + ".results"
@@ -106,7 +48,7 @@ class AtomPub(yagi.handler.BaseHandler):
         max_wait = int(self.config_get("max_wait"))
         entity_links = self.config_get("generate_entity_links") == "True"
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
-        conn, headers = self.new_http_connection()
+        connection = HttpConnection(self)
 
         for payload in self.iterate_payloads(messages, env):
             try:
@@ -130,10 +72,8 @@ class AtomPub(yagi.handler.BaseHandler):
 
             while True:
                 try:
-                    code = self._send_notification(endpoint, endpoint,
-                                                   headers,
-                                                   payload_body,
-                                                   conn)
+                    code = connection.send_notification(endpoint, endpoint,
+                                                        payload_body)
                     error = False
                     msg = ''
                     break
@@ -177,7 +117,7 @@ class AtomPub(yagi.handler.BaseHandler):
                     failures = 0
                     conn = None
                 if conn is None:
-                    conn, headers = self.new_http_connection(force=True)
+                    connection = HttpConnection(self,force=True)
 
             self.note_result(env, payload, code=code)
 
