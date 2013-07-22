@@ -9,6 +9,8 @@ import yagi.log
 with yagi.config.defaults_for("stacktach") as default:
     default("timeout", "120")
     default("url", "http://127.0.0.1/db/confirm/usage/exists/batch")
+    default("ping_events", "compute.instance.exists.verified.old")
+    default("results_from", "atompub.results")
 
 LOG = yagi.log.logger
 
@@ -16,29 +18,62 @@ LOG = yagi.log.logger
 class StackTachPing(yagi.handler.BaseHandler):
     CONFIG_SECTION = "stacktach"
 
-    def handle_messages(self, messages, env):
-        atompub_results = env.get('atompub.results')
-        ping = dict()
+    @property
+    def matching_events(self):
+        events = self.config_get('ping_events')
+        return [e.strip() for e in events.split(',')]
 
-        if atompub_results is None:
-            LOG.error("Stacktack ping handler cannot find results from atompub!")
+    @property
+    def results_from(self):
+        result_names = self.config_get('results_from')
+        return [e.strip() for e in result_names.split(',')]
+
+    def match_event(self, payload):
+        event_type = payload.get('event_type')
+        for e in self.matching_events:
+            if event_type == e:
+                return True
+            if e == '*':
+                return True
+        return False
+
+    def get_results(self, env):
+        names = self.results_from
+        results = dict(((r, env.get(r)) for r in names if r in env))
+        for n in names:
+            if n not in env:
+                LOG.error("Stacktack ping handler cannot"
+                          " find results from %s!" % n)
+        return results
+
+    def handle_messages(self, messages, env):
+        results = self.get_results(env)
+        if not results:
+            LOG.error("Stacktack ping handler cannot find any results!")
             return
+        pings = dict(((n,dict()) for n in results))
 
         for payload in self.iterate_payloads(messages, env):
-            msgid = payload["message_id"]
-            st = atompub_results.get(msgid)
-            code = 0
-            if st is not None:
-                code = st['code']
-            ping[msgid] = code
-        url =  self.config_get("url")
-        status = self._post_to_st(url, ping)
+            if self.match_event(payload):
+                ping_msgid = msgid = payload["message_id"]
+                if 'original_message_id' in payload:
+                    ping_msgid = payload['original_message_id']
+                for result in results:
+                    st = results[result].get(msgid)
+                    code = 0
+                    if st is not None:
+                        code = st['code']
+                    pings[result][ping_msgid] = code
+        url = self.config_get("url")
+        for ping in pings.values():
+            if ping:
+                self._post_to_st(url, ping)
 
     def _check_return(self, status):
         return status == requests.codes.ok
 
     def _post_to_st(self, url, ping):
-        timeout =  int(self.config_get("timeout"))
+        timeout = int(self.config_get("timeout"))
         data = json.dumps(dict(messages=ping))
         try:
             res = requests.put(url, data=data,

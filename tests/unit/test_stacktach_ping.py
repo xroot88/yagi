@@ -30,14 +30,29 @@ class StackTachPingTests(unittest.TestCase):
 
     def setUp(self):
         self.stubs = stubout.StubOutForTesting()
-        config_dict = {
+        self.config_dict = {
             'stacktach': {
                 'url': 'http://127.0.0.1:9000/db/confirm/usage/exists/batch',
                 'timeout': '120',
+                "ping_events": "*",
+                "results_from": "atompub.results",
             },
         }
 
         self.handler = StackTachPing()
+        self.messages = [MockMessage({'event_type': 'compute.instance.create',
+                    'message_id': '1',
+                    'content': dict(a=3)}),
+                    MockMessage({'event_type': 'compute.instance.delete',
+                    'message_id': '2',
+                    'content': dict(a=42)}),
+                    ]
+        self.mock_env = {'atompub.results':
+                      {'1' : dict(code=201, error=False, message="yay"),
+                       '2' : dict(code=404, error=False, message="boo")}}
+
+        self.called = False
+        self.data = None
 
         def get(*args, **kwargs):
             val = None
@@ -45,7 +60,7 @@ class StackTachPingTests(unittest.TestCase):
                 if val:
                     val = val.get(arg)
                 else:
-                    val = config_dict.get(arg)
+                    val = self.config_dict.get(arg)
                     if not val:
                         return None or kwargs.get('default')
             return val
@@ -60,30 +75,16 @@ class StackTachPingTests(unittest.TestCase):
         self.stubs.UnsetAll()
 
     def test_ping(self):
-        messages = [MockMessage({'event_type': 'compute.instance.create',
-                    'message_id': '1',
-                    'content': dict(a=3)}),
-                    MockMessage({'event_type': 'compute.instance.delete',
-                    'message_id': '2',
-                    'content': dict(a=42)}),
-                    ]
-
-        self.called = False
-        self.data = None
 
         def mock_put(url, data=None, **kw):
             self.called = True
             self.data = data
             return MockResponse(201)
 
-        mock_env = {'atompub.results':
-                      {'1' : dict(code=201, error=False, message="yay"),
-                       '2' : dict(code=404, error=False, message="boo")}}
-
         self.stubs.Set(requests, 'put', mock_put)
         self.stubs.Set(requests.codes, 'ok', 201)
 
-        self.handler.handle_messages(messages, mock_env)
+        self.handler.handle_messages(self.messages, self.mock_env)
         self.assertTrue(self.called)
         val = json.loads(self.data)
         self.assertTrue('messages' in val)
@@ -93,28 +94,43 @@ class StackTachPingTests(unittest.TestCase):
 
     def test_ping_fails(self):
         #make sure it doesn't blow up if stacktach is borked.
-        messages = [MockMessage({'event_type': 'compute.instance.create',
-                    'message_id': '1',
-                    'content': dict(a=3)}),
-                    MockMessage({'event_type': 'compute.instance.delete',
-                    'message_id': '2',
-                    'content': dict(a=42)}),
-                    ]
-
-        self.called = False
-        self.data = None
 
         def mock_put(url, data=None, **kw):
             self.called = True
             self.data = data
             return MockResponse(500)
 
-        mock_env = {'atompub.results':
-                      {'1' : dict(code=201, error=False, message="yay"),
-                       '2' : dict(code=404, error=False, message="boo")}}
-
         self.stubs.Set(requests, 'put', mock_put)
         self.stubs.Set(requests.codes, 'ok', 201)
 
-        self.handler.handle_messages(messages, mock_env)
+        self.handler.handle_messages(self.messages, self.mock_env)
         self.assertTrue(self.called)
+
+    def test_match_event(self):
+        matched = []
+        conf = self.config_dict['stacktach']
+        conf['ping_events'] = "compute.instance.create"
+        for payload in self.handler.iterate_payloads(self.messages,
+                                                     self.mock_env):
+            #should match all of them
+            if self.handler.match_event(payload):
+                matched.append(payload)
+
+        self.assertEqual(len(matched), 1)
+
+    def test_match_event_wildcard(self):
+        matched = []
+        for payload in self.handler.iterate_payloads(self.messages,
+                                                     self.mock_env):
+            #should match all of them
+            if self.handler.match_event(payload):
+                matched.append(payload)
+
+        self.assertEqual(len(matched), len(self.messages))
+
+    def test_get_results(self):
+        results = self.handler.get_results(self.mock_env)
+        self.assertTrue('atompub.results' in results)
+        self.assertEqual(len(results),1)
+
+

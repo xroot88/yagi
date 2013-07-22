@@ -83,16 +83,30 @@ class AtomPub(yagi.handler.BaseHandler):
             raise Exception("Invalid auth or no auth supplied")
         return conn, headers
 
+    def note_result(self, env, payload, code=0, error=False, message=None):
+        name = self.__class__.__name__.lower() + ".results"
+        results = env.get(name) if name in env else dict()
+        msgid = payload["message_id"]
+        result = dict(error=error)
+        if message is None:
+            if error:
+                message = "Error, unable to send notification"
+            else:
+                message = "Success"
+        result['message'] = message
+        result['code'] = code if not error else 0
+
+        results[msgid] = result
+        env[name] = results
+
     def handle_messages(self, messages, env):
         retries = int(self.config_get("retries"))
         interval = int(self.config_get("interval"))
         max_wait = int(self.config_get("max_wait"))
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
         conn, headers = self.new_http_connection()
-        results = env.setdefault('atompub.results', dict())
 
         for payload in self.iterate_payloads(messages, env):
-            msgid = payload["message_id"]
             try:
                 entity = dict(content=payload,
                               id=payload["message_id"],
@@ -102,7 +116,7 @@ class AtomPub(yagi.handler.BaseHandler):
                 error_msg = "Malformed Notification: %s" % payload
                 LOG.error(error_msg)
                 LOG.exception(e)
-                results[msgid] = dict(error=True, code=0, message=error_msg)
+                self.note_result(env, payload, error=True, message=error_msg)
                 continue
 
             endpoint = self.config_get("url")
@@ -147,7 +161,7 @@ class AtomPub(yagi.handler.BaseHandler):
                 if retries > 0:
                     if tries >= retries:
                         msg = "Exceeded retry limit. Error %s" % error_msg
-                        results[msgid] = dict(error=False, code=code, message=msg)
+                        self.note_result(env, payload, code=code, message=msg)
                         break
                 wait = min(tries * interval, max_wait)
                 LOG.error("Message delivery failed, going to sleep, will "
@@ -162,6 +176,6 @@ class AtomPub(yagi.handler.BaseHandler):
                 if conn is None:
                     conn, headers = self.new_http_connection(force=True)
 
-            results[msgid] = dict(error=False, code=code, message="Success")
+            self.note_result(env, payload, code=code)
 
 
