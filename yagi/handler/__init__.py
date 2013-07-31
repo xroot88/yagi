@@ -32,9 +32,11 @@ class BaseHandler(object):
         return val
 
     def filter_message(self, messages):
-        filter_event_type = yagi.config.get('filters').get(self.CONFIG_SECTION)
-        if filter_event_type is not None:
-            return [message for message in messages if
+        filters = yagi.config.get('filters')
+        if filters:
+            filter_event_type = filters.get(self.CONFIG_SECTION)
+            if filter_event_type:
+                return [message for message in messages if
                     message.payload['event_type'] in filter_event_type]
         return messages
 

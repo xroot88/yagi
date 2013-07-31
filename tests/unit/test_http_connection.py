@@ -1,5 +1,4 @@
-from django.utils import unittest
-from django.utils import unittest
+import unittest
 import httplib2
 from yagi import http_util
 from tests.unit.test_cufpub import MockMessage, MockResponse
