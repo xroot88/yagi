@@ -1,35 +1,105 @@
 # Yagi
 
-A PubSubHubBub Publisher implementation in Python
+A modular OpenStack notification event processor/broadcaster written in Python.
 
-## Why PubSubHubBub?
+Yagi is designed to efficiently gather amqp messages in the json format used by OpenStack projects
+notification busses, from a large and configurable number of queues, and proccess them through an extensible
+set of simple handlers.
 
-We wanted to use a defined spec with easy to use clients, and PubSubHubBub fit
-the bill nicely. 
+Handlers are simple to write, and can be chained in a WSGI-like architecture.
+Yagi handles fetching messages, a batch at a time, and passes fetched messages to each handler,
+handling AMQP message semantics so the handlers can concentrate on the task at hand.
 
-## Why implement an external publisher?
+In addition, a feed daemon is included that can generate a paged Atom feed of notification events that have been persisted in a datastore.
 
-The original impetus for this project is to adapt an existing piece of
-software to sending notifications without laying the job of managing those
-notifications on said implementation. Because PubSubHubBub requires an ATOM
-feed, we didn\'t want the original software from having to worry about
-completely unrelated functionality. Additionally, this route buys us a
-lot of flexibility.
+## Available Handlers
+
+* AtomPub: Formats notifications in Atom format, and pushes them to a
+           feed server using the AtomPub protocol. Useful with feed servers such as AtomHopper
+           (http://atomhopper.org/)
+* Redis:   Persists notifications to a Redis database. Can be used with
+           Yagi\'s feed daemon.
+* PubSubHubub: Pings a pubsubhubub hub when notifications arrive.
+               Together with a hub, and yagi\'s feed daemon, this can enable publish/subscribe subscriptions
+               to notification events.
+* StackTackPing: Works with the StackTach openstack monitoring tool to
+                 monitor event feeds. If you are using Yagi to provide feeds of openstack notifications,
+                 this will ping stacktach when those feeds are updated, informing it of the success or failure
+                 of the updates, letting you catch if the feed server is down, or some system is dropping events.
+
+## Installation and running
+
+The current version of Yagi can be fetched from the code repository at: https://github.com/rackerlabs/yagi
+cd to the yagi directory and run:
+
+    sudo python setup.py install
+
+The launch the yagi process:
+
+    yagi-event
+
+An altername config file may be passed to yagi like this:
+
+    yagi-event -c /path/to/config/file
+
+Yagi does not daemonize. use your favorite daemon manager to do that.
+
+
+## Configuration
+
+A sample yagi.conf can be found in the etc directory.
+
+Sections to note:
+* rabbit_broker: Your rabbit connection info goes here.
+* event_feed: If using the feed daemon, remember to set the feed_host to
+              the name of the host it is running on. This allows yagi to correctly construct links in the feed.
+* persistence: If using the redis handler, put your reddisc connection
+               info here.
+* consumers: the 'queues' config variable lists the queues yagi should
+             listen on.
+* consumer:$queue_name: For each queue Yagi is listening on there should
+                       be a consumer section in the config file (for example if you have a queue named
+                       some.queue listed in the [consumers] section, there should be a [consumer:some.queue]
+                       section with configuration for that specific queue.) This should list properties
+                       for the queue, such as if itshould be durable. Important variables here are 'apps',
+                       which is a comma separated list of handlers that messages from that queues should be
+                       passed to, and 'max_messages' which is the maximum number of messages that
+                       Yagi will pull from that queue at one time. (it will then go to the next queue,
+                       eventually coming back around, if there are still messages waiting)
+
+Handlers may also have their own, additional configuration.
+This is usually found in a section named after the handler (all lowercase, one word)
+
+## Scaling
+
+Yagi is designed to scale by running multiple processes. Simply launch as many yagi-event processes as
+you need to handle your load. (yagi-event is fairly lightweight)
 
 ## Dependencies:
 
+* anyjson
 * argparse
 * feedgenerator
 * httplib2
-* redis
+* requests (eventually httplib2 will be replaced with requests)
+* redis (if using redis handler)
 * webob
 * eventlet
+* python-dateutil
 * daemon
-* pubsubhubbub_publish (available under the publisher_clients folder after checking out the project from [Google Code](http://code.google.com/p/pubsubhubbub/source/checkout) NOTE: the plan is to replace this dependency later with our implementation
+* pubsubhubbub_publish (if using pubsubhubub handler) (available under the publisher_clients folder
+         after checking out the project from [Google Code]
+         (http://code.google.com/p/pubsubhubbub/source/checkout)
+         NOTE: the plan is to replace this dependency later with our implementation
 * carrot (if using Rabbit)
 * routes
 
-## Setting up the hub
+## Running the feed daemon
+
+Simply run:
+    yagi-feed
+
+## Setting up a hub (if using PubSubHubub)
 
 Download the Google App Engine SDK for Linux and add it to your path
 
@@ -49,22 +119,7 @@ Start the hub
     cd pubsubhubbub-read-only
     dev_appserver.py hub/ -p<port number specified in yagi.conf>
 
-## Setting up Yagi
-
-After setting up the hub, above
-
-    cd yagi
-    # edit yagi.conf, setting up as appropriate
-    # Take care to update the feed_host variable in the event_feed
-    # section as it will be the IP address presented in the feed. Otherwise
-    # Yagi will attempt to infer it, and it doesn't seem to be all that
-    # successful at it.
-    sudo cp yagi.conf /etc
-    sudo python setup.py install
-    yagi-event
-    yagi-feed
-
-## Testing subscriptions
+## Testing subscriptions for PubSubHubub.
 
     cd yagi
 
