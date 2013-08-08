@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import feedgenerator
 
@@ -45,7 +46,7 @@ class PagedFeed(feedgenerator.Atom1Feed):
         if item['link'] is not None:
             handler.addQuickElement(u"link", u"", {u"href": item['link'], u"rel": u"alternate"})
         if item['pubdate'] is not None:
-            handler.addQuickElement(u"updated", rfc3339_date(item['pubdate']).decode('utf-8'))
+            handler.addQuickElement(u"updated", feedgenerator.rfc3339_date(item['pubdate']).decode('utf-8'))
 
         # Author information.
         if item['author_name'] is not None:
@@ -61,7 +62,7 @@ class PagedFeed(feedgenerator.Atom1Feed):
         if item['unique_id'] is not None:
             unique_id = item['unique_id']
         else:
-            unique_id = get_tag_uri(item['link'], item['pubdate'])
+            unique_id = "urn:uuid:%s" % uuid.uuid4()
         handler.addQuickElement(u"id", unique_id)
 
         # Summary.
