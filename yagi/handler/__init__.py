@@ -1,4 +1,4 @@
-from ConfigParser import NoSectionError
+from ConfigParser import NoSectionError, NoOptionError
 import yagi.config
 import yagi.log
 
@@ -31,12 +31,23 @@ class BaseHandler(object):
             val = method(self.CONFIG_SECTION, key, default=default)
         return val
 
+    def filter_message(self, messages):
+        try:
+            filter_event_type = yagi.config.get('filters', self.CONFIG_SECTION)
+            if filter_event_type:
+                return [message for message in messages if
+                        message.payload['event_type'] in filter_event_type]
+        except (NoOptionError, NoSectionError):
+            pass
+        return messages
+
     def __call__(self, messages, env=None):
         if env is None:
             env = dict()
         if self.app:
             self.app(messages, env=env)
-        self.handle_messages(messages, env=env)
+        filtered_messages = self.filter_message(messages)
+        self.handle_messages(filtered_messages, env=env)
         return env
 
     def filter_payload(self, payload, env):
