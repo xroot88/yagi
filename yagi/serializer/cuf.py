@@ -30,7 +30,7 @@ def _categories():
                 (conf(val).split(',') if conf(val) else [])]
 
 
-def dump_item(entity):
+def dump_item(entity, service_title="Server"):
     """Serializes a single dictionary as an ATOM entry"""
     from StringIO import StringIO
 
@@ -53,5 +53,5 @@ def dump_item(entity):
     description=event_type,
     contents=entity['content']['payload'],
     categories=[event_type] + _categories())
-    feed.write_item(handler, feed.items[0], root=True)
+    feed.write_item(handler, feed.items[0], root=True, title=service_title)
     return outfile.getvalue()

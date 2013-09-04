@@ -115,8 +115,8 @@ class AtomPub(yagi.handler.BaseHandler):
                     # Don't always try to reconnect, give it a few
                     # tries first
                     failures = 0
-                    conn = None
-                if conn is None:
+                    connection = None
+                if connection is None:
                     connection = HttpConnection(self,force=True)
 
             self.note_result(env, payload, code=code)

@@ -89,11 +89,23 @@ class PagedFeed(feedgenerator.Atom1Feed):
 
 class CufPagedFeed(feedgenerator.Atom1Feed):
 
+    def root_attributes_for_cuf(self, title):
+        if title == "Server":
+            if self.feed['language'] is not None:
+                return {"xmlns": self.ns, "xml:lang": self.feed['language']}
+            else:
+                return {"xmlns": self.ns}
+        if title == "Glance":
+            return {"xmlns:atom": self.ns,
+                    "xmlns": "http://docs.rackspace.com/core/event",
+                    "xmlns:glance": "http://docs.rackspace.com/usage/glance"}
+
     # Get it to care about content elements
-    def write_item(self, handler, item, root=False):
+    def write_item(self, handler, item, root=False, title="Server"):
+        handler.processingInstruction("atom", 'feed="glance/events"')
         handler.startElement(u"atom:entry",
-                             self.root_attributes() if root else {})
-        handler.addQuickElement(u"atom:title", "Server")
+                             self.root_attributes_for_cuf(title) if root else {})
+        handler.addQuickElement(u"atom:title", attrs={"type": "text"}, contents=title)
         handler.addQuickElement(u"atom:content",
                                 item['contents'],
                                 dict(type="application/xml"))
