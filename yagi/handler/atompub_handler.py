@@ -14,7 +14,7 @@ with yagi.config.defaults_for("atompub") as default:
     default("validate_ssl", "False")
     default("generate_entity_links", "False")
     default("retries", "-1")
-    default("url", "http://127.0.0.1/nova")
+    default("url", "http://127.0.0.1:8080")
     default("max_wait", "600")
     default("failures_before_reauth", "5")
     default("interval", "30")
@@ -48,13 +48,16 @@ class AtomPub(yagi.handler.BaseHandler):
         max_wait = int(self.config_get("max_wait"))
         entity_links = self.config_get("generate_entity_links") == "True"
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
+        is_stacktach_down = self.config_get("stacktach_down")
         connection = HttpConnection(self)
 
         for payload in self.iterate_payloads(messages, env):
             try:
+                event_type = 'compute.instance.exists.verified' \
+                    if is_stacktach_down else payload["event_type"]
                 entity = dict(content=payload,
                               id=payload["message_id"],
-                              event_type=payload["event_type"])
+                              event_type=event_type)
                 payload_body = yagi.serializer.atom.dump_item(entity,
                                                   entity_links=entity_links)
             except KeyError, e:

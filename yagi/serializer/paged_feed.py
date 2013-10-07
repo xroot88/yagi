@@ -105,6 +105,8 @@ class CufPagedFeed(feedgenerator.Atom1Feed):
         handler.processingInstruction("atom", 'feed="glance/events"')
         handler.startElement(u"atom:entry",
                              self.root_attributes_for_cuf(title) if root else {})
+        for cat in item['categories']:
+            handler.addQuickElement(u"category", u"", {u"term": cat})
         handler.addQuickElement(u"atom:title", attrs={"type": "text"}, contents=title)
         handler.addQuickElement(u"atom:content",
                                 item['contents'],

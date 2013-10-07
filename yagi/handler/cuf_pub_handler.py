@@ -12,9 +12,9 @@ import yagi.serializer.cuf
 
 with yagi.config.defaults_for("cufpub") as default:
     default("validate_ssl", "False")
-    default("generate_entity_links", "False")
+    default("generate_entity_links", "True")
     default("retries", "-1")
-    default("url", "http://127.0.0.1/nova")
+    default("url", "http://127.0.0.1:8080")
     default("max_wait", "600")
     default("failures_before_reauth", "5")
     default("interval", "30")
@@ -33,7 +33,7 @@ class CufPub(yagi.handler.BaseHandler):
              'data_center': deployment_info['REGION']})
         entity = dict(content=cuf,
                       id=str(uuid.uuid4()),
-                      event_type='compute.instance.exists.verified')
+                      event_type='compute.instance.exists.verified.cuf')
         payload_body = yagi.serializer.cuf.dump_item(entity)
         return payload_body
 
@@ -46,7 +46,7 @@ class CufPub(yagi.handler.BaseHandler):
 
         entity = dict(content=cuf,
                       id=str(uuid.uuid4()),
-                      event_type='image.exists.verified')
+                      event_type='image.exists.verified.cuf')
         payload_body = yagi.serializer.cuf.dump_item(entity, service_title="Glance")
         return payload_body
 

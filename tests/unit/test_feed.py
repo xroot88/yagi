@@ -107,7 +107,9 @@ class TestCufFeed(unittest.TestCase):
                                       next_page_url=None)
         cuf_paged_feed.write_item(handler,item)
         expected_result = '<?xml version="1.0" encoding="utf-8"?>\n'\
-        '<?atom feed="glance/events"?><atom:entry><atom:title type="text">'\
+        '<?atom feed="glance/events"?><atom:entry><category '\
+        'term="test"></category>'\
+        '<atom:title type="text">'\
         'Server</atom:title><atom:content type="application/xml">&lt;event '\
         'xmlns="http://docs.rackspace.com/core/event" xmlns:nova="http://'\
         'docs.rackspace.com/event/nova" version="1" ' \

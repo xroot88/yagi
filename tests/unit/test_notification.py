@@ -17,6 +17,7 @@ class TestGlanceNotification(TestCase):
         self.mox.UnsetStubs()
 
     def test_convert_to_cuf_format(self):
+        self.maxDiff = None
         exists_message = {
             "event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
