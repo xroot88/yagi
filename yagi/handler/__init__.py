@@ -34,9 +34,14 @@ class BaseHandler(object):
     def filter_message(self, messages):
         try:
             filter_event_type = yagi.config.get('filters', self.CONFIG_SECTION)
+            exclude_filter_event_type = yagi.config.get(
+                'exclude_filters', self.CONFIG_SECTION)
             if filter_event_type:
-                return [message for message in messages if
-                        message.payload['event_type'] in filter_event_type]
+                messages = [message for message in messages if
+                    message.payload['event_type'] in filter_event_type]
+            if exclude_filter_event_type:
+                return [message for message in messages if message.payload[
+                        'event_type'] not in exclude_filter_event_type]
         except (NoOptionError, NoSectionError):
             pass
         return messages
