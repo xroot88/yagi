@@ -43,13 +43,12 @@ def format_time(time):
 class NotificationPayload(object):
     def __init__(self, payload_json):
         self.deleted_at = ''
-        self.options = payload_json['image_meta']['com.rackspace__1__options']
-        bandwidth = payload_json['bandwidth']
+        self.image_meta = payload_json.get('image_meta', {})
+        self.options = self.image_meta.get('com.rackspace__1__options', 0)
+        bandwidth = payload_json.get('bandwidth', {})
         public_bandwidth = bandwidth.get('public', {})
-        self.bandwidth_in = public_bandwidth.get('bw_in', "")
-        bandwidth = payload_json['bandwidth']
-        public_bandwidth = bandwidth.get('public', {})
-        self.bandwidth_out = public_bandwidth.get('bw_out', "")
+        self.bandwidth_in = public_bandwidth.get('bw_in', 0)
+        self.bandwidth_out = public_bandwidth.get('bw_out', 0)
 
         self.launched_at = str(format_time(payload_json['launched_at']))
 
@@ -63,10 +62,11 @@ class NotificationPayload(object):
             self.deleted_at = str(format_time(
                 payload_json['deleted_at']))
 
-        self.tenant_id = payload_json.get('tenant_id',"")
+        self.tenant_id = payload_json.get('tenant_id', "")
         self.instance_id = payload_json.get('instance_id', "")
         self.flavor = payload_json.get('instance_type_id', "")
-        self.start_time = start_time(self.launched_at, self.audit_period_beginning)
+        self.start_time = start_time(self.launched_at,
+                                     self.audit_period_beginning)
         self.end_time = end_time(self.deleted_at, self.audit_period_ending)
 
 
@@ -82,7 +82,7 @@ class GlanceNotificationPayload(object):
             image['id'] = uuid.uuid4()
             image['resource_id'] = raw_image.get('id', "")
             image['tenant_id'] = payload_json.get('owner', "")
-            created_at = raw_image.get('created_at')
+            created_at = raw_image['created_at']
             if raw_image['deleted_at']:
                 deleted_at = raw_image['deleted_at']
             image['start_time'] = start_time(created_at,
@@ -95,6 +95,3 @@ class GlanceNotificationPayload(object):
             image['server_name'] = properties.get('instance_name', "")
             image['storage'] = raw_image.get('size', "")
             self.images.append(image)
-
-
-

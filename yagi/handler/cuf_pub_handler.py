@@ -12,9 +12,9 @@ import yagi.serializer.cuf
 
 with yagi.config.defaults_for("cufpub") as default:
     default("validate_ssl", "False")
-    default("generate_entity_links", "True")
+    default("generate_entity_links", "False")
     default("retries", "-1")
-    default("url", "http://127.0.0.1:8080")
+    default("url", "http://127.0.0.1/nova")
     default("max_wait", "600")
     default("failures_before_reauth", "5")
     default("interval", "30")

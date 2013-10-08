@@ -14,7 +14,7 @@ with yagi.config.defaults_for("atompub") as default:
     default("validate_ssl", "False")
     default("generate_entity_links", "False")
     default("retries", "-1")
-    default("url", "http://127.0.0.1:8080")
+    default("url", "http://127.0.0.1/nova")
     default("max_wait", "600")
     default("failures_before_reauth", "5")
     default("interval", "30")
@@ -42,6 +42,12 @@ class AtomPub(yagi.handler.BaseHandler):
         results[msgid] = result
         env[name] = results
 
+    def _get_event_type(self, is_stacktach_down, payload):
+        event_type = payload['event_type']
+        if event_type == 'compute.instance.exists' and is_stacktach_down:
+            event_type = 'compute.instance.exists.verified'
+        return event_type
+
     def handle_messages(self, messages, env):
         retries = int(self.config_get("retries"))
         interval = int(self.config_get("interval"))
@@ -53,13 +59,12 @@ class AtomPub(yagi.handler.BaseHandler):
 
         for payload in self.iterate_payloads(messages, env):
             try:
-                event_type = 'compute.instance.exists.verified' \
-                    if is_stacktach_down else payload["event_type"]
+                event_type = self._get_event_type(is_stacktach_down, payload)
                 entity = dict(content=payload,
                               id=payload["message_id"],
                               event_type=event_type)
                 payload_body = yagi.serializer.atom.dump_item(entity,
-                                                  entity_links=entity_links)
+                    entity_links=entity_links)
             except KeyError, e:
                 error_msg = "Malformed Notification: %s" % payload
                 LOG.error(error_msg)

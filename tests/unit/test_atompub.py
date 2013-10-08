@@ -125,3 +125,26 @@ class AtomPubTests(unittest.TestCase):
         self.handler.handle_messages(messages, dict())
         self.mox.VerifyAll()
         self.assertEqual(self.called, True)
+
+    def test_do_not_change_other_events_to_verified_when_stacktach_down(self):
+        payload = {'event_type': 'compute.instance.random', 'message_id': 1,
+                   'content': dict(a=3)}
+        messages = [MockMessage(payload)]
+        self.called = False
+
+        def mock_request(*args, **kwargs):
+            self.called = True
+            return MockResponse(404), None
+
+        AtomPubTests.config_dict['atompub']['stacktach_down'] = True
+        self.mox.StubOutWithMock(yagi.serializer.atom, 'dump_item')
+        expected_entity = {
+                    'event_type': 'compute.instance.random',
+                    'id': 1,
+                    'content': payload}
+        yagi.serializer.atom.dump_item(expected_entity, entity_links=False)
+        self.mox.ReplayAll()
+        self.stubs.Set(httplib2.Http, 'request', mock_request)
+        self.handler.handle_messages(messages, dict())
+        self.mox.VerifyAll()
+        self.assertEqual(self.called, True)
