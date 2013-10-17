@@ -6,6 +6,7 @@ from yagi.handler import notification_payload
 from yagi.handler.cuf_pub_handler import Notification
 from yagi.handler.notification import GlanceNotification
 from yagi.handler.notification_payload import NotificationPayload
+import yagi.config
 
 
 class TestGlanceNotification(TestCase):
@@ -112,6 +113,10 @@ class TestNovaNotification(TestCase):
 
     def setUp(self):
         self.mox = mox.Mox()
+        self.mox.StubOutWithMock(yagi.config, 'get')
+        yagi.config.get('nova', 'nova_flavor_field_name').AndReturn(
+            'dummy_flavor_field_name')
+        self.mox.ReplayAll()
 
     def tearDown(self):
         self.mox.UnsetStubs()
@@ -133,7 +138,7 @@ class TestNovaNotification(TestCase):
                 },
                 'image_meta': {'com.rackspace__1__options': '1'},
                 'instance_id': '56',
-                'instance_type_id': '10',
+                'dummy_flavor_field_name': '10',
                 'launched_at': '2012-09-14 11:51:11',
                 'deleted_at': ''
             }
@@ -159,25 +164,24 @@ class TestNovaNotification(TestCase):
         audit_period_ending = '2012-09-16 10:51:11'
         launched_at = '2012-09-15 11:51:11'
         exists_message = {
-                'event_type': 'test',
-                'message_id': 'some_uuid',
-                '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
-                'payload':
-                    {'tenant_id':'2882',
-                     'access_ip_v4': '5.79.20.138',
-                     'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
-                     'audit_period_beginning': audit_period_beginning,
-                     'audit_period_ending': audit_period_ending,
-                     'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
-                                   'public': {'bw_in': 1001,'bw_out': 19992}
-                                  },
-                     'image_meta': {'com.rackspace__1__options': '1'},
-                     'instance_id': '56',
-                     'instance_type_id': '10',
-                     'launched_at': launched_at,
-                     'deleted_at': ''
-                    }
+            'event_type': 'test',
+            'message_id': 'some_uuid',
+            '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
+            'payload': {
+                'tenant_id': '2882',
+                'access_ip_v4': '5.79.20.138',
+                'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
+                'audit_period_beginning': audit_period_beginning,
+                'audit_period_ending': audit_period_ending,
+                'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
+                              'public': {'bw_in': 1001,'bw_out': 19992}},
+                'image_meta': {'com.rackspace__1__options': '1'},
+                'instance_id': '56',
+                'dummy_flavor_field_name': '10',
+                'launched_at': launched_at,
+                'deleted_at': ''
             }
+        }
         self.mox.StubOutWithMock(uuid, 'uuid4')
         uuid.uuid4().AndReturn('some_other_uuid')
         self.mox.ReplayAll()
@@ -199,25 +203,24 @@ class TestNovaNotification(TestCase):
         launched_at = '2012-09-15 11:51:11'
         deleted_at = '2012-09-15 09:51:11'
         exists_message = {
-                'event_type': 'test',
-                'message_id': 'some_uuid',
-                '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
-                'payload':
-                    {'tenant_id':'2882',
-                     'access_ip_v4': '5.79.20.138',
-                     'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
-                     'audit_period_beginning': audit_period_beginning,
-                     'audit_period_ending': audit_period_ending,
-                     'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
-                                   'public': {'bw_in': 1001,'bw_out': 19992}
-                                  },
-                     'image_meta': {'com.rackspace__1__options': '1'},
-                     'instance_id': '56',
-                     'instance_type_id': '10',
-                     'launched_at': launched_at,
-                     'deleted_at': deleted_at
-                    }
+            'event_type': 'test',
+            'message_id': 'some_uuid',
+            '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
+            'payload': {
+                'tenant_id':'2882',
+                'access_ip_v4': '5.79.20.138',
+                'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
+                'audit_period_beginning': audit_period_beginning,
+                'audit_period_ending': audit_period_ending,
+                'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
+                              'public': {'bw_in': 1001,'bw_out': 19992}},
+                'image_meta': {'com.rackspace__1__options': '1'},
+                'instance_id': '56',
+                'dummy_flavor_field_name': '10',
+                'launched_at': launched_at,
+                'deleted_at': deleted_at
             }
+        }
         values = utils.test_nova_xml_generator_values
         values.update({'end_time': '2012-09-15 09:51:11'})
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -235,6 +238,17 @@ class TestNovaNotification(TestCase):
 
 
 class TestNotificationPayload(TestCase):
+
+    def setUp(self):
+        self.mox = mox.Mox()
+        self.mox.StubOutWithMock(yagi.config, 'get')
+        yagi.config.get('nova', 'nova_flavor_field_name').AndReturn(
+            'dummy_flavor_field_name')
+        self.mox.ReplayAll()
+
+    def tearDown(self):
+        self.mox.UnsetStubs()
+
     def test_start_time_should_get_max_of_launched_at_and_audit_period_beginning(self):
         payload_json ={'tenant_id':'2882',
                      'access_ip_v4': '5.79.20.138',
@@ -246,7 +260,7 @@ class TestNotificationPayload(TestCase):
                                   },
                      'image_meta': {'com.rackspace__1__options': '1'},
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
                      'deleted_at': '2012-09-15 09:51:11'
                     }
@@ -264,7 +278,7 @@ class TestNotificationPayload(TestCase):
                                   },
                      'image_meta': {'com.rackspace__1__options': '1'},
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
                      'deleted_at': '2012-09-15 09:51:11'
                     }
@@ -282,7 +296,7 @@ class TestNotificationPayload(TestCase):
                                   },
                      'image_meta': {'com.rackspace__1__options': '1'},
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
                      'deleted_at': ''
                     }
@@ -301,7 +315,7 @@ class TestNotificationPayload(TestCase):
                                   },
                      'image_meta': {'com.rackspace__1__options': '1'},
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
                      'deleted_at': ''
                     }

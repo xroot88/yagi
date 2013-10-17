@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import yagi
 
 
 def start_time(launched_at, audit_period_beginning):
@@ -64,7 +65,8 @@ class NotificationPayload(object):
 
         self.tenant_id = payload_json.get('tenant_id', "")
         self.instance_id = payload_json.get('instance_id', "")
-        self.flavor = payload_json.get('instance_type_id', "")
+        field_name = yagi.config.get('nova', 'nova_flavor_field_name')
+        self.flavor = payload_json[field_name]
         self.start_time = start_time(self.launched_at,
                                      self.audit_period_beginning)
         self.end_time = end_time(self.deleted_at, self.audit_period_ending)
