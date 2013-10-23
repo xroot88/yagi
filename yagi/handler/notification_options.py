@@ -9,7 +9,8 @@ class NotificationOptions(object):
 
 
     def to_cuf_options(self):
-        options_bit_to_dict_map = {'1': {'is_redhat': 'true'},
+        options_bit_to_dict_map = {'0': {},
+                                   '1': {'is_redhat': 'true'},
                                    '2': {'is_se_linux': 'true'},
                                    '4': {'is_windows': 'true'},
                                    '12': {'is_windows': 'true',

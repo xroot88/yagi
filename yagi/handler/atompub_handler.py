@@ -42,21 +42,29 @@ class AtomPub(yagi.handler.BaseHandler):
         results[msgid] = result
         env[name] = results
 
+    def _get_event_type(self, is_stacktach_down, payload):
+        event_type = payload['event_type']
+        if event_type == 'compute.instance.exists' and is_stacktach_down:
+            event_type = 'compute.instance.exists.verified'
+        return event_type
+
     def handle_messages(self, messages, env):
         retries = int(self.config_get("retries"))
         interval = int(self.config_get("interval"))
         max_wait = int(self.config_get("max_wait"))
         entity_links = self.config_get("generate_entity_links") == "True"
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
+        is_stacktach_down = self.config_get("stacktach_down")
         connection = HttpConnection(self)
 
         for payload in self.iterate_payloads(messages, env):
             try:
+                event_type = self._get_event_type(is_stacktach_down, payload)
                 entity = dict(content=payload,
                               id=payload["message_id"],
-                              event_type=payload["event_type"])
+                              event_type=event_type)
                 payload_body = yagi.serializer.atom.dump_item(entity,
-                                                  entity_links=entity_links)
+                    entity_links=entity_links)
             except KeyError, e:
                 error_msg = "Malformed Notification: %s" % payload
                 LOG.error(error_msg)
@@ -115,8 +123,8 @@ class AtomPub(yagi.handler.BaseHandler):
                     # Don't always try to reconnect, give it a few
                     # tries first
                     failures = 0
-                    conn = None
-                if conn is None:
+                    connection = None
+                if connection is None:
                     connection = HttpConnection(self,force=True)
 
             self.note_result(env, payload, code=code)

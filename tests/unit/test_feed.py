@@ -87,9 +87,9 @@ class TestCufFeed(unittest.TestCase):
         outfile = StringIO()
         handler = feedgenerator.SimplerXMLGenerator(outfile, 'utf-8')
         handler.startDocument()
-        contents =  '<event xmlns="http://docs.rackspace.com/core/event"' \
-                    ' xmlns:nova="http://docs.rackspace.com/event/nova" ' \
-                    'version="1" tenantId="2882"/></event>'
+        contents = '<event xmlns="http://docs.rackspace.com/core/event" ' \
+                   'xmlns:nova="http://docs.rackspace.com/event/nova" ' \
+                   'version="1" tenantId="2882"/></event>'
         item = {u'description': u'test', u'pubdate': None,
                 u'author_link': None, u'author_name': None,
                 u'link': 'http://127.0.0.1/test/some_uuid',
@@ -107,9 +107,11 @@ class TestCufFeed(unittest.TestCase):
                                       next_page_url=None)
         cuf_paged_feed.write_item(handler,item)
         expected_result = '<?xml version="1.0" encoding="utf-8"?>\n'\
-        '<atom:entry><atom:title>Server</atom:title>'\
-        '<atom:content type="application/xml">&lt;event ' \
-        'xmlns="http://docs.rackspace.com/core/event"' \
-        ' xmlns:nova="http://docs.rackspace.com/event/nova" version="1"' \
-        ' tenantId="2882"/&gt;&lt;/event&gt;</atom:content></atom:entry></atom>'
+        '<?atom feed="glance/events"?><atom:entry><category '\
+        'term="test"></category>'\
+        '<atom:title type="text">'\
+        'Server</atom:title><atom:content type="application/xml">&lt;event '\
+        'xmlns="http://docs.rackspace.com/core/event" xmlns:nova="http://'\
+        'docs.rackspace.com/event/nova" version="1" ' \
+        'tenantId="2882"/&gt;&lt;/event&gt;</atom:content></atom:entry></atom>'
         self.assertEqual(outfile.getvalue(),expected_result)
