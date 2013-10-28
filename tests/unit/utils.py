@@ -7,12 +7,12 @@ test_nova_xml_generator_values = {
     'start_time':'2012-09-15 11:51:11',
     'end_time': '2012-09-16 11:51:11',
     'resource_type': 'SERVER',
-    'is_red_hat': 'true', 'is_ms_sql': 'false',
-    'is_ms_sql_web': 'false', 'is_windows': 'false',
-    'is_se_linux': 'false', 'is_managed': 'false',
+    'options_string': 'isRedHat="true" ',
     'bandwidth_in': 1001,
     'bandwidth_out': 19992,
-    'flavor': 10
+    'flavor_id': 10,
+    'flavor_name': "m1.nano",
+    'status': "ACTIVE",
 }
 
 test_glance_xml_generator_values = {
@@ -39,10 +39,8 @@ def verified_nova_message_in_cuf_format(values):
     """dataCenter="%(data_center)s" region="%(region)s" """
     """startTime="%(start_time)s" endTime="%(end_time)s">"""
     """<nova:product version="1" serviceCode="CloudServersOpenStack" """
-    """resourceType="%(resource_type)s" flavor="%(flavor)s" """
-    """isRedHat="%(is_red_hat)s" isMSSQL="%(is_ms_sql)s" """
-    """isMSSQLWeb="%(is_ms_sql_web)s" isWindows="%(is_windows)s" """
-    """isSELinux="%(is_se_linux)s" isManaged="%(is_managed)s" """
+    """resourceType="%(resource_type)s" status="%(status)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" """
+    """%(options_string)s"""
     """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"/>"""
     """</event>""") % test_nova_xml_generator_values
     return {'payload': cuf_xml}

@@ -140,7 +140,10 @@ class TestNovaNotification(TestCase):
                 'instance_id': '56',
                 'dummy_flavor_field_name': '10',
                 'launched_at': '2012-09-14 11:51:11',
-                'deleted_at': ''
+                'deleted_at': '',
+                'instance_type': 'm1.nano',
+                'state': 'active',
+                'state_description': ''
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -179,7 +182,10 @@ class TestNovaNotification(TestCase):
                 'instance_id': '56',
                 'dummy_flavor_field_name': '10',
                 'launched_at': launched_at,
-                'deleted_at': ''
+                'deleted_at': '',
+                'instance_type': 'm1.nano',
+                'state': 'active',
+                'state_description': ''
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -218,7 +224,10 @@ class TestNovaNotification(TestCase):
                 'instance_id': '56',
                 'dummy_flavor_field_name': '10',
                 'launched_at': launched_at,
-                'deleted_at': deleted_at
+                'deleted_at': deleted_at,
+                'instance_type': 'm1.nano',
+                'state': 'active',
+                'state_description': ''
             }
         }
         values = utils.test_nova_xml_generator_values
@@ -262,7 +271,10 @@ class TestNotificationPayload(TestCase):
                      'instance_id': '56',
                      'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
-                     'deleted_at': '2012-09-15 09:51:11'
+                     'deleted_at': '2012-09-15 09:51:11',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.start_time, '2012-09-15 11:51:11')
@@ -280,7 +292,10 @@ class TestNotificationPayload(TestCase):
                      'instance_id': '56',
                      'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
-                     'deleted_at': '2012-09-15 09:51:11'
+                     'deleted_at': '2012-09-15 09:51:11',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time, '2012-09-15 09:51:11')
@@ -298,7 +313,10 @@ class TestNotificationPayload(TestCase):
                      'instance_id': '56',
                      'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
-                     'deleted_at': ''
+                     'deleted_at': '',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time, '2012-09-16 10:51:11')
@@ -317,7 +335,10 @@ class TestNotificationPayload(TestCase):
                      'instance_id': '56',
                      'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 11:51:11',
-                     'deleted_at': ''
+                     'deleted_at': '',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time, '2012-09-16 10:51:11.799674')
