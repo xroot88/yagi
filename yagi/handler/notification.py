@@ -9,10 +9,8 @@ nova_cuf_template = ("""<event xmlns="http://docs.rackspace.com/core/event" """
 """="%(data_center)s" region="%(region)s" startTime"""
 """="%(start_time)s" endTime="%(end_time)s"><nova:product """
 """version="1" serviceCode="CloudServersOpenStack" resourceType"""
-"""="SERVER" flavor="%(flavor)s" isRedHat="%(is_redhat)s" """
-"""isMSSQL="%(is_ms_sql)s" isMSSQLWeb="%(is_ms_sql_web)s" """
-"""isWindows="%(is_windows)s" isSELinux="%(is_se_linux)s" """
-"""isManaged="%(is_managed)s" bandwidthIn="%(bandwidth_in)s" """
+"""="SERVER" status="%(status)s" flavorId="%(flavor_id)s" flavorName"""
+"""="%(flavor_name)s"%(options_string)s bandwidthIn="%(bandwidth_in)s" """
 """bandwidthOut="%(bandwidth_out)s"/></event>""")
 
 glance_cuf_template_per_image = ("""<event endTime="%(end_time)s" """
@@ -31,7 +29,8 @@ class Notification(object):
     def _create_cuf_xml(self, deployment_info, json_body):
         payload = NotificationPayload(json_body['payload'])
         notification_options = {'com.rackspace__1__options': payload.options}
-        cuf_xml_values = NotificationOptions(
+        cuf_xml_values = {}
+        cuf_xml_values['options_string'] = NotificationOptions(
             notification_options).to_cuf_options()
         cuf_xml_values['bandwidth_in'] = payload.bandwidth_in
         cuf_xml_values['bandwidth_out'] = payload.bandwidth_out
@@ -40,7 +39,9 @@ class Notification(object):
         cuf_xml_values['tenant_id'] = payload.tenant_id
         cuf_xml_values['instance_id'] = payload.instance_id
         cuf_xml_values['id'] = json_body['_unique_id']
-        cuf_xml_values['flavor'] = payload.flavor
+        cuf_xml_values['flavor_id'] = payload.flavor_id
+        cuf_xml_values['flavor_name'] = payload.flavor_name
+        cuf_xml_values['status'] = payload.status
         cuf_xml_values['data_center'] = deployment_info['data_center']
         cuf_xml_values['region'] = deployment_info['region']
         cuf_xml = nova_cuf_template % cuf_xml_values

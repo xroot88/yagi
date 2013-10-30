@@ -59,6 +59,9 @@ class CufPubTests(unittest.TestCase):
                 'retries': 1,
                 'failures_before_reauth': 5
 
+            },
+            'nova': {
+                'nova_flavor_field_name': 'dummy_flavor_field_name'
             }
         }
 
@@ -103,14 +106,17 @@ class CufPubTests(unittest.TestCase):
                      'image_meta': {'com.rackspace__1__options': '1'},
 
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '10',
                      'launched_at': '2012-09-15 12:51:11',
-                     'deleted_at': ''}
+                     'deleted_at': '',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''}
             }
         )]
 
-        body = ("""<?xml version="1.0" encoding="utf-8"?>\n<?atom """
-        """feed="glance/events"?><atom:entry xmlns="http://www.w3.org"""
+        body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
+        """<atom:entry xmlns:atom="http://www.w3.org"""
         """/2005/Atom"><category term="compute.instance.exists.verified.cuf">"""
         """</category><atom:title type="text">Server</atom:title>"""
         """<atom:content type="application/xml">&lt;event xmlns="http://"""
@@ -121,10 +127,9 @@ class CufPubTests(unittest.TestCase):
         """region="ORD1" startTime="2012-09-15 12:51:11" """
         """endTime="2012-09-16 11:51:11"&gt;&lt;nova:product version="1" """
         """serviceCode="CloudServersOpenStack" resourceType="SERVER" """
-        """flavor="10" isRedHat="true" isMSSQL="false" isMSSQLWeb="false" """
-        """isWindows="false" isSELinux="false" isManaged="false" """
+        """status="ACTIVE" flavorId="10" flavorName="m1.nano" isRedHat="true" """
         """bandwidthIn="1001" bandwidthOut="19992"/&gt;&lt;/event&gt"""
-        """;</atom:content></atom:entry></atom>""")
+        """;</atom:content></atom:entry>""")
         self.mox.StubOutWithMock(httplib2.Http, """request""")
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=body,
@@ -163,8 +168,8 @@ class CufPubTests(unittest.TestCase):
         }}
         )]
 
-        cuf_xml_body = ("""<?xml version="1.0" encoding="utf-8"?>\n<?atom """
-        """feed="glance/events"?><atom:entry xmlns="http://docs.rackspace."""
+        cuf_xml_body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
+        """<atom:entry xmlns="http://docs.rackspace."""
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<category term="image.exists.verified.cuf"></category>"""
@@ -177,7 +182,7 @@ class CufPubTests(unittest.TestCase):
         """tenantId="owner1" version="1"&gt; &lt;glance:product """
         """storage="12345" serverId="inst_uuid1" serviceCode="Glance" """
         """serverName="" resourceType="snapshot" version="1"/&gt;&lt;/event&gt;&lt;/events&gt;"""
-        """</atom:content></atom:entry></atom>""")
+        """</atom:content></atom:entry>""")
 
         self.mox.StubOutWithMock(httplib2.Http, 'request')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
@@ -231,8 +236,8 @@ class CufPubTests(unittest.TestCase):
         }}
         )]
 
-        cuf_xml_body = ("""<?xml version="1.0" encoding="utf-8"?>\n<?atom """
-        """feed="glance/events"?><atom:entry xmlns="http://docs.rackspace."""
+        cuf_xml_body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
+        """<atom:entry xmlns="http://docs.rackspace."""
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<category term="image.exists.verified.cuf"></category>"""
@@ -249,7 +254,7 @@ class CufPubTests(unittest.TestCase):
         """tenantId="owner1" version="1"&gt; &lt;glance:product storage="67890" """
         """serverId="inst_uuid2" serviceCode="Glance" serverName="" """
         """resourceType="snapshot" version="1"/&gt;&lt;/event&gt;&lt;/events&gt;"""
-        """</atom:content></atom:entry></atom>""")
+        """</atom:content></atom:entry>""")
 
         self.mox.StubOutWithMock(httplib2.Http, 'request')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
@@ -283,9 +288,12 @@ class CufPubTests(unittest.TestCase):
                      'image_meta': {'com.rackspace__1__options': '1'},
 
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '40',
                      'launched_at': '2012-09-15 12:51:11',
-                     'deleted_at': ''}
+                     'deleted_at': '',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': ''}
             }
         )]
         self.called = False
@@ -315,7 +323,7 @@ class CufPubTests(unittest.TestCase):
                      'image_meta': {'com.rackspace__1__options': '1'},
 
                      'instance_id': '56',
-                     'instance_type_id': '10',
+                     'dummy_flavor_field_name': '40',
                      'launched_at': '2012-09-15 12:51:11',
                      'deleted_at': ''}
             }
