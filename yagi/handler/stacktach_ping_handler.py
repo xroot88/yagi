@@ -63,7 +63,8 @@ class StackTachPing(yagi.handler.BaseHandler):
                     code = 0
                     if st is not None:
                         code = st['code']
-                    pings[result][ping_msgid] = code
+                        service = st['service']
+                    pings[result][ping_msgid] = {'code': code, 'service': service}
         url = self.config_get("url")
         for ping in pings.values():
             if ping:

@@ -48,8 +48,10 @@ class StackTachPingTests(unittest.TestCase):
                     'content': dict(a=42)}),
                     ]
         self.mock_env = {'atompub.results':
-                      {'1' : dict(code=201, error=False, message="yay"),
-                       '2' : dict(code=404, error=False, message="boo")}}
+                      {'1' : dict(code=201, error=False, message="yay",
+                                  service="nova"),
+                       '2' : dict(code=404, error=False, message="boo",
+                                  service="nova")}}
 
         self.called = False
         self.data = None
@@ -89,8 +91,8 @@ class StackTachPingTests(unittest.TestCase):
         val = json.loads(self.data)
         self.assertTrue('messages' in val)
         self.assertEqual(len(val['messages']), 2)
-        self.assertEqual(val['messages']['1'], 201)
-        self.assertEqual(val['messages']['2'], 404)
+        self.assertEqual(val['messages']['1']['code'], 201)
+        self.assertEqual(val['messages']['2']['code'], 404)
 
     def test_ping_fails(self):
         #make sure it doesn't blow up if stacktach is borked.
