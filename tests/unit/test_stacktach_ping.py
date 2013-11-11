@@ -90,9 +90,9 @@ class StackTachPingTests(unittest.TestCase):
         self.assertTrue(self.called)
         val = json.loads(self.data)
         self.assertTrue('messages' in val)
-        self.assertEqual(len(val['messages']), 2)
-        self.assertEqual(val['messages']['1']['code'], 201)
-        self.assertEqual(val['messages']['2']['code'], 404)
+        self.assertEqual(len(val['messages']), 3)
+        self.assertEqual(val['messages']['nova']['1'], 201)
+        self.assertEqual(val['messages']['nova']['2'], 404)
 
     def test_ping_fails(self):
         #make sure it doesn't blow up if stacktach is borked.
