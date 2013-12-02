@@ -57,8 +57,7 @@ class BaseHandlerTests(unittest.TestCase):
 
         },
         'filters' : {
-            'cufpub': ['compute.instance.exists.verified',
-                       'compute.instance.exists']
+            'cufpub': 'compute.instance.exists.verified, compute.instance.exists'
         },
         'exclude_filters' : {}
     }
@@ -192,6 +191,8 @@ class BaseHandlerTests(unittest.TestCase):
         messages = [mock_message1]
         filtered_messages= [mock_message1]
         atom_pub = atompub_handler.AtomPub()
+        self.config_dict['exclude_filters'] = {
+            "atompub": {}}
         self.mox.StubOutWithMock(atom_pub, 'handle_messages')
         atom_pub.handle_messages(filtered_messages,env=dict())
         self.mox.ReplayAll()
@@ -266,7 +267,7 @@ class BaseHandlerTests(unittest.TestCase):
             }
         )
         self.config_dict['exclude_filters'] = {
-            "atompub": ['image.exists.verified']}
+            "atompub": 'image.exists.verified'}
         messages = [mock_message1, mock_message2, mock_message3]
         filtered_messages= [mock_message1, mock_message3]
         atom_pub = atompub_handler.AtomPub()

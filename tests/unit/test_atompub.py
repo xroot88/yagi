@@ -1,5 +1,6 @@
 import functools
 import unittest
+import uuid
 
 import httplib2
 import mox
@@ -35,7 +36,7 @@ class AtomPubTests(unittest.TestCase):
             'max_wait': 600,
             'retries': 1,
             'failures_before_reauth': 5,
-            'stacktach_down': False
+            'stacktach_down': 'False'
         },
         'event_feed': {
             'feed_title': 'feed_title',
@@ -45,6 +46,9 @@ class AtomPubTests(unittest.TestCase):
         },
         'handler_auth': {
             'method': 'no_auth'
+        },
+        'exclude_filters': {
+          'atompub': {}
         }
     }
 
@@ -103,7 +107,44 @@ class AtomPubTests(unittest.TestCase):
         self.handler.handle_messages(messages, dict())
         self.assertEqual(self.called, True)
 
-    def test_change_exists_event_to_verified_when_stacktach_down(self):
+    def test_send_exists_and_exists_verified_when_stacktach_down(self):
+        message_id = 1
+        exists_payload = {'event_type': 'compute.instance.exists',
+                          'message_id': message_id, 'content': dict(a=3)}
+        exists_verified_payload = {
+            'event_type': 'compute.instance.exists.verified',
+            'message_id': message_id, 'content': dict(a=3)}
+        messages = [MockMessage(exists_payload)]
+        self.called = False
+
+        def mock_request(*args, **kwargs):
+            self.called = True
+            return MockResponse(404), None
+
+        AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
+        new_message_id = '16fd2706-8baf-433b-82eb-8c7fada847da'
+        self.mox.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(new_message_id)
+        self.mox.StubOutWithMock(yagi.serializer.atom, 'dump_item')
+        expected_verified_entity = {
+                    'event_type': 'compute.instance.exists.verified',
+                    'id': new_message_id,
+                    'content': exists_verified_payload}
+        expected_exists_entity = {
+                    'event_type': 'compute.instance.exists',
+                    'id': message_id,
+                    'content': exists_payload}
+        yagi.serializer.atom.dump_item(expected_verified_entity,
+                                       entity_links=False)
+        yagi.serializer.atom.dump_item(expected_exists_entity,
+                                       entity_links=False)
+        self.mox.ReplayAll()
+        self.stubs.Set(httplib2.Http, 'request', mock_request)
+        self.handler.handle_messages(messages, dict())
+        self.mox.VerifyAll()
+        self.assertEqual(self.called, True)
+
+    def test_send_only_exists_when_stacktach_down(self):
         payload = {'event_type': 'compute.instance.exists', 'message_id': 1,
                    'content': dict(a=3)}
         messages = [MockMessage(payload)]
@@ -113,10 +154,12 @@ class AtomPubTests(unittest.TestCase):
             self.called = True
             return MockResponse(404), None
 
-        AtomPubTests.config_dict['atompub']['stacktach_down'] = True
+        AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
+        AtomPubTests.config_dict['exclude_filters']['atompub'] = \
+            'compute.instance.exists.verified'
         self.mox.StubOutWithMock(yagi.serializer.atom, 'dump_item')
         expected_entity = {
-                    'event_type': 'compute.instance.exists.verified',
+                    'event_type': 'compute.instance.exists',
                     'id': 1,
                     'content': payload}
         yagi.serializer.atom.dump_item(expected_entity, entity_links=False)
@@ -136,7 +179,7 @@ class AtomPubTests(unittest.TestCase):
             self.called = True
             return MockResponse(404), None
 
-        AtomPubTests.config_dict['atompub']['stacktach_down'] = True
+        AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
         self.mox.StubOutWithMock(yagi.serializer.atom, 'dump_item')
         expected_entity = {
                     'event_type': 'compute.instance.random',
