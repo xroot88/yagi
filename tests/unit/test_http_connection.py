@@ -4,7 +4,7 @@ from yagi import http_util
 from tests.unit.test_cufpub import MockMessage, MockResponse
 from yagi.handler.atompub_handler import UnauthorizedException, MessageDeliveryFailed
 from yagi.handler.cuf_pub_handler import CufPub
-from yagi.handler.http_connection import HttpConnection
+from yagi.handler.http_connection import HttpConnection, InvalidContentException
 import functools
 import stubout
 import yagi
@@ -96,12 +96,12 @@ class HttpConnectionTests(unittest.TestCase):
         self.assertRaises(UnauthorizedException,http_conn.send_notification,
                           endpoint, endpoint, payload_body)
 
-    def test_response_other_than_201_raises_exception(self):
+    def test_response_other_than_201_or_400_raises_exception(self):
         self.called = False
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(400), None
+            return MockResponse(405), None
 
         handler = CufPub()
         http_conn = HttpConnection(handler)
@@ -160,6 +160,21 @@ class HttpConnectionTests(unittest.TestCase):
 
         status = http_conn.send_notification(endpoint, endpoint, payload_body)
         self.assertEqual(status,409)
+
+    def test_response_status_400_raises_invalid_content_exception(self):
+        self.called = False
+
+        def mock_request(*args, **kwargs):
+            self.called = True
+            return MockResponse(400), None
+        handler = CufPub()
+        http_conn = HttpConnection(handler)
+        endpoint = handler.config_get("url")
+        payload_body = {"a":"b"}
+        self.stubs.Set(httplib2.Http, 'request', mock_request)
+
+        self.assertRaises(InvalidContentException, http_conn.send_notification,
+                          endpoint, endpoint, payload_body)
 
 
 

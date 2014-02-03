@@ -4,7 +4,7 @@ import uuid
 from yagi import stats
 import yagi
 from yagi.config import config
-from yagi.handler.http_connection import HttpConnection
+from yagi.handler.http_connection import HttpConnection, InvalidContentException
 from yagi.handler.http_connection import MessageDeliveryFailed
 from yagi.handler.http_connection import UnauthorizedException
 from yagi.handler.notification import Notification, GlanceNotification
@@ -91,6 +91,11 @@ class CufPub(yagi.handler.BaseHandler):
                 try:
                     code = connection.send_notification(endpoint, endpoint,
                                                          payload_body)
+                    break
+                except InvalidContentException, e:
+                    LOG.exception(e)
+                    LOG.error(payload_body)
+                    results[msgid] = dict(error=False, code=code, message=e.msg)
                     break
                 except UnauthorizedException, e:
                     LOG.exception(e)
