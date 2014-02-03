@@ -29,6 +29,14 @@ class UnauthorizedException(Exception):
     pass
 
 
+class InvalidContentException(Exception):
+    def __init__(self, msg, code, *args):
+        self.code = code
+        self.msg = msg
+        args = (msg, code) + args
+        super(InvalidContentException, self).__init__(*args)
+
+
 class HttpConnection():
     def __init__(self, handler,force=False):
         ssl_check = not (handler.config_get("validate_ssl") == "True")
@@ -62,6 +70,11 @@ class HttpConnection():
             if resp.status == 409:
                 #message id already exists. this is a dup, don't resend.
                 return resp.status
+            if resp.status == 400:
+                msg = ("%s resource create failed for %s Status: "
+                            "%s, %s" % (self.handler, puburl, resp.status,
+                                        content))
+                raise InvalidContentException(msg, resp.status)
             if resp.status != 201:
                 msg = ("%s resource create failed for %s Status: "
                             "%s, %s" % (self.handler, puburl, resp.status,
