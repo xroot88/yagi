@@ -26,16 +26,20 @@ class CufPub(yagi.handler.BaseHandler):
     CONFIG_SECTION = "cufpub"
     AUTO_ACK = True
 
+    def unescape_strings(self, payload_body):
+        return str.replace(str.replace(payload_body, "&lt;", "<"), "&gt;", ">")
+
     def nova_cuf(self, deployment_info, payload):
         cuf = Notification(payload). \
             convert_to_verified_message_in_cuf_format(
-            {'region': deployment_info['DATACENTER'],
-             'data_center': deployment_info['REGION']})
+            {'region': deployment_info['REGION'],
+             'data_center': deployment_info['DATACENTER']})
         entity = dict(content=cuf,
                       id=str(uuid.uuid4()),
                       event_type='compute.instance.exists.verified.cuf')
         payload_body = yagi.serializer.cuf.dump_item(entity)
-        return payload_body
+        return self.unescape_strings(payload_body)
+
 
     def glance_cuf(self, deployment_info, payload):
 
@@ -48,7 +52,7 @@ class CufPub(yagi.handler.BaseHandler):
                       id=str(uuid.uuid4()),
                       event_type='image.exists.verified.cuf')
         payload_body = yagi.serializer.cuf.dump_item(entity, service_title="Glance")
-        return payload_body
+        return self.unescape_strings(payload_body)
 
     def get_deployment_info(self, deployment_info_string):
         data_center = deployment_info_string.split(',')[0].split('=')[1]
