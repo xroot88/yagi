@@ -2,12 +2,13 @@ test_nova_xml_generator_values = {
     'tenant_id': 2882,
     'id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
     'resource_id': '56',
+    'resource_name': 'test',
     'data_center': 'DFW1',
     'region': 'DFW',
-    'start_time':'2012-09-15 11:51:11',
-    'end_time': '2012-09-16 11:51:11',
+    'start_time':'2012-09-15T11:51:11Z',
+    'end_time': '2012-09-16T11:51:11Z',
     'resource_type': 'SERVER',
-    'options_string': 'isRedHat="true" ',
+    'options_string': 'osLicenseType="RHEL"',
     'bandwidth_in': 1001,
     'bandwidth_out': 19992,
     'flavor_id': 10,
@@ -21,8 +22,8 @@ test_glance_xml_generator_values = {
     'resource_id': '56',
     'data_center': 'DFW1',
     'region': 'DFW',
-    'start_time':'2012-09-15 11:51:11',
-    'end_time': '2012-09-16 11:51:11',
+    'start_time':'2012-09-15T11:51:11Z',
+    'end_time': '2012-09-16T11:51:11Z',
     'resource_type': 'SNAPSHOT',
     'storage': 12345,
     'server_id': 123,
@@ -34,13 +35,11 @@ def verified_nova_message_in_cuf_format(values):
     test_nova_xml_generator_values.update(values)
     cuf_xml = ("""<event xmlns="http://docs.rackspace.com/core/event" """
     """xmlns:nova="http://docs.rackspace.com/event/nova" """
-    """version="1" tenantId="%(tenant_id)s" """
-    """id="%(id)s" resourceId="%(resource_id)s" type="USAGE" """
-    """dataCenter="%(data_center)s" region="%(region)s" """
-    """startTime="%(start_time)s" endTime="%(end_time)s">"""
+    """version="1" id="%(id)s" resourceId="%(resource_id)s" resourceName="%(resource_name)s" dataCenter="%(data_center)s" region="%(region)s" tenantId="%(tenant_id)s" """
+    """startTime="%(start_time)s" endTime="%(end_time)s" type="USAGE">"""
     """<nova:product version="1" serviceCode="CloudServersOpenStack" """
-    """resourceType="%(resource_type)s" status="%(status)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" """
-    """%(options_string)s"""
+    """resourceType="%(resource_type)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" status="%(status)s" """
+    """%(options_string)s """
     """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"/>"""
     """</event>""") % test_nova_xml_generator_values
     return {'payload': cuf_xml}

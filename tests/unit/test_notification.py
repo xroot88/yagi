@@ -1,5 +1,6 @@
 from unittest import TestCase
 import uuid
+import datetime
 import mox
 from tests.unit import utils
 from yagi.handler import notification_payload
@@ -62,24 +63,27 @@ class TestGlanceNotification(TestCase):
         self.mox.StubOutWithMock(notification_payload, 'end_time')
         notification_payload.start_time(
             '2013-09-02 16:08:10',
-            '2013-09-02 00:00:00').AndReturn('2013-09-02 00:00:00')
+            '2013-09-02 00:00:00').AndReturn(datetime.datetime(2013,9,2))
         notification_payload.end_time(
             None,
-            '2013-09-02 23:59:59.999999').AndReturn('2013-09-02 23:59:59.999999')
+            '2013-09-02 23:59:59.999999').AndReturn(datetime.datetime(
+                2013, 9, 2, 23, 59, 59, 999999))
         notification_payload.start_time(
             '2013-09-02 16:05:17',
-            '2013-09-02 00:00:00').AndReturn('2013-09-02 16:05:17')
+            '2013-09-02 00:00:00').AndReturn(datetime.datetime(
+                2013, 9, 2, 16, 5, 17))
         notification_payload.end_time(
             '2013-09-02 16:08:46',
-            '2013-09-02 23:59:59.999999').AndReturn('2013-09-02 23:59:59.999999')
+            '2013-09-02 23:59:59.999999').AndReturn(datetime.datetime(
+                2013, 9, 2, 23, 59, 59, 999999))
         self.mox.ReplayAll()
-        expected_cuf_xml = {'payload': ("""<events><event endTime="2013-09-02 23:59:59.999999" """
-        """startTime="2013-09-02 00:00:00" region="DFW" dataCenter="DFW1" """
+        expected_cuf_xml = {'payload': ("""<events><event endTime="2013-09-02T23:59:59Z" """
+        """startTime="2013-09-02T00:00:00Z" region="DFW" dataCenter="DFW1" """
         """type="USAGE" id="uuid1" resourceId="image1" tenantId="owner1" """
         """version="1"> <glance:product storage="12345" serverId="inst_uuid1" """
         """serviceCode="Glance" serverName="" resourceType="snapshot" """
-        """version="1"/></event><event endTime="2013-09-02 23:59:59.999999" """
-        """startTime="2013-09-02 16:05:17" region="DFW" dataCenter="DFW1" """
+        """version="1"/></event><event endTime="2013-09-02T23:59:59Z" """
+        """startTime="2013-09-02T16:05:17Z" region="DFW" dataCenter="DFW1" """
         """type="USAGE" id="uuid2" resourceId="image2" tenantId="owner1" """
         """version="1"> <glance:product storage="67890" serverId="inst_uuid2" """
         """serviceCode="Glance" serverName="" resourceType="snapshot" """
@@ -95,19 +99,19 @@ class TestGlanceNotification(TestCase):
     def test_start_time_should_return_launched_at_when_launched_at_is_bigger(self):
         start_time = notification_payload.start_time('2013-09-02 16:08:10',
             '2013-09-02 00:00:00')
-        self.assertEqual(start_time, "2013-09-02 16:08:10")
+        self.assertEqual(str(start_time), "2013-09-02 16:08:10")
 
     def test_end_time_should_return_deleted_at_when_deleted_at_is_smaller(self):
         end_time = notification_payload.end_time(
             '2013-09-02 16:08:46',
             '2013-09-02 23:59:59.999999')
-        self.assertEqual(end_time, "2013-09-02 16:08:46")
+        self.assertEqual(str(end_time), "2013-09-02 16:08:46")
 
     def test_end_time_should_return_audit_period_beginning_when_deleted_at_is_none(self):
         end_time = notification_payload.end_time(
             "",
             '2013-09-02 23:59:59.999999')
-        self.assertEqual(end_time, "2013-09-02 23:59:59.999999")
+        self.assertEqual(str(end_time), "2013-09-02 23:59:59.999999")
 
 class TestNovaNotification(TestCase):
 
@@ -132,6 +136,7 @@ class TestNovaNotification(TestCase):
                 'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
                 'audit_period_beginning': '2012-09-15 11:51:11',
                 'audit_period_ending': '2012-09-16 11:51:11',
+                'display_name': 'test',
                 'bandwidth': {
                     'private': {'bw_in': 0, 'bw_out': 264902},
                     'public': {'bw_in': 1001,'bw_out': 19992}
@@ -147,10 +152,10 @@ class TestNovaNotification(TestCase):
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn('some_other_uuid')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
         self.mox.ReplayAll()
         values = utils.test_nova_xml_generator_values
-        values.update({'end_time': '2012-09-16 11:51:11'})
+        values.update({'end_time': '2012-09-16T11:51:11Z'})
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
 
@@ -178,6 +183,7 @@ class TestNovaNotification(TestCase):
                 'audit_period_ending': audit_period_ending,
                 'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
                               'public': {'bw_in': 1001,'bw_out': 19992}},
+                'display_name': 'test',
                 'image_meta': {'com.rackspace__1__options': '1'},
                 'instance_id': '56',
                 'dummy_flavor_field_name': '10',
@@ -189,10 +195,10 @@ class TestNovaNotification(TestCase):
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn('some_other_uuid')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
         self.mox.ReplayAll()
         values = utils.test_nova_xml_generator_values
-        values.update({'end_time': '2012-09-16 10:51:11'})
+        values.update({'end_time': '2012-09-16T10:51:11Z'})
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
         notification = Notification(exists_message)
@@ -218,6 +224,7 @@ class TestNovaNotification(TestCase):
                 'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
                 'audit_period_beginning': audit_period_beginning,
                 'audit_period_ending': audit_period_ending,
+                'display_name': 'test',
                 'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
                               'public': {'bw_in': 1001,'bw_out': 19992}},
                 'image_meta': {'com.rackspace__1__options': '1'},
@@ -231,9 +238,9 @@ class TestNovaNotification(TestCase):
             }
         }
         values = utils.test_nova_xml_generator_values
-        values.update({'end_time': '2012-09-15 09:51:11'})
+        values.update({'end_time': '2012-09-15T09:51:11Z'})
         self.mox.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn('some_other_uuid')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
         notification = Notification(exists_message)
@@ -277,7 +284,8 @@ class TestNotificationPayload(TestCase):
                      'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
-        self.assertEquals(payload.start_time, '2012-09-15 11:51:11')
+        self.assertEquals(payload.start_time,
+                          datetime.datetime(2012, 9, 15, 11, 51, 11))
 
     def test_end_time_should_get_min_of_deleted_at_and_audit_period_ending(self):
         payload_json ={'tenant_id':'2882',
@@ -298,7 +306,7 @@ class TestNotificationPayload(TestCase):
                      'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
-        self.assertEquals(payload.end_time, '2012-09-15 09:51:11')
+        self.assertEquals(str(payload.end_time), '2012-09-15 09:51:11')
 
     def test_end_time_should_be_audit_period_ending_when_deleted_at_is_empty(self):
         payload_json ={'tenant_id':'2882',
@@ -319,7 +327,8 @@ class TestNotificationPayload(TestCase):
                      'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
-        self.assertEquals(payload.end_time, '2012-09-16 10:51:11')
+        self.assertEquals(payload.end_time,
+                          datetime.datetime(2012, 9, 16, 10, 51, 11))
 
     def test_different_time_formats_should_not_raise_exception(self):
         payload_json ={'tenant_id':'2882',
@@ -341,5 +350,6 @@ class TestNotificationPayload(TestCase):
                      'state_description': ''
                     }
         payload = NotificationPayload(payload_json)
-        self.assertEquals(payload.end_time, '2012-09-16 10:51:11.799674')
+        self.assertEquals(payload.end_time,
+                          datetime.datetime(2012, 9, 16, 10, 51, 11, 799674))
 

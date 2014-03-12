@@ -8,17 +8,17 @@ LOG = yagi.log.logger
 
 def start_time(launched_at, audit_period_beginning):
         start_time = max(launched_at, audit_period_beginning)
-        return format_time(start_time)
+        return format_time(start_time, return_in_datetime_format=True)
 
 
 def end_time(deleted_at, audit_period_ending):
         if not deleted_at:
-            return format_time(audit_period_ending)
+            return format_time(audit_period_ending, return_in_datetime_format=True)
         end_time = min(deleted_at, audit_period_ending)
-        return format_time(end_time)
+        return format_time(end_time, return_in_datetime_format=True)
 
 
-def format_time(time):
+def format_time(time,return_in_datetime_format=False):
         if 'T' in time:
             try:
                 # Old way of doing it
@@ -40,7 +40,8 @@ def format_time(time):
                         time = datetime.datetime.strptime(time, "%d %m %Y %H:%M:%S")
                     except Exception, e:
                         print "BAD DATE: ", e
-
+        if return_in_datetime_format:
+            return time
         return str(time)
 
 
@@ -68,6 +69,7 @@ class NotificationPayload(object):
 
         self.tenant_id = payload_json.get('tenant_id', "")
         self.instance_id = payload_json.get('instance_id', "")
+        self.instance_name = payload_json.get('display_name', "")
         field_name = yagi.config.get('nova', 'nova_flavor_field_name')
         self.flavor_id = payload_json[field_name]
         self.flavor_name = payload_json['instance_type']
@@ -142,7 +144,7 @@ class NotificationPayload(object):
 
 
 class GlanceNotificationPayload(object):
-    def __init__(self, payload_json):
+    def __init__(self, payload_json, time_format):
         deleted_at = None
         self.images = []
         raw_images = payload_json.get('images', {})
@@ -156,10 +158,11 @@ class GlanceNotificationPayload(object):
             created_at = raw_image['created_at']
             if raw_image['deleted_at']:
                 deleted_at = raw_image['deleted_at']
-            image['start_time'] = start_time(created_at,
-                                             audit_period_beginning)
-            image['end_time'] = end_time(deleted_at,
-                                         audit_period_ending)
+            image['start_time'] = datetime.datetime.strftime(start_time(
+                created_at, audit_period_beginning), time_format)
+
+            image['end_time'] = datetime.datetime.strftime(end_time(
+                deleted_at, audit_period_ending), time_format)
             properties = raw_image.get('properties', {})
             image['resource_type'] = properties.get('image_type', "")
             image['server_id'] = properties.get('instance_uuid', "")

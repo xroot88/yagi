@@ -93,13 +93,13 @@ class CufPubTests(unittest.TestCase):
             {
                 'event_type': 'compute.instance.exists',
                 'message_id': 'some_uuid',
-                '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
                 'payload':
                     {'tenant_id': '2882',
                      'access_ip_v4': '5.79.20.138',
                      'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
                      'audit_period_beginning': '2012-09-15 11:51:11',
                      'audit_period_ending': '2012-09-16 11:51:11',
+                     'display_name': 'test',
                      'bandwidth': {'private': {'bw_in': '0', 'bw_out': '264902'},
                                    'public': {'bw_in': '1001', 'bw_out': '19992'}
                                   },
@@ -119,18 +119,21 @@ class CufPubTests(unittest.TestCase):
         """<atom:entry xmlns:atom="http://www.w3.org"""
         """/2005/Atom"><category term="compute.instance.exists.verified.cuf">"""
         """</category><atom:title type="text">Server</atom:title>"""
-        """<atom:content type="application/xml">&lt;event xmlns="http://"""
+        """<atom:content type="application/xml"><event xmlns="http://"""
         """docs.rackspace.com/core/event" xmlns:nova="http://docs"""
-        """.rackspace.com/event/nova" version"""
-        """="1" tenantId="2882" id="e53d007a-fc23-11e1-975c-cfa6b29bb814" """
-        """resourceId="56" type="USAGE" dataCenter="PREPROD-ORD" """
-        """region="ORD1" startTime="2012-09-15 12:51:11" """
-        """endTime="2012-09-16 11:51:11"&gt;&lt;nova:product version="1" """
-        """serviceCode="CloudServersOpenStack" resourceType="SERVER" """
-        """status="ACTIVE" flavorId="10" flavorName="m1.nano" isRedHat="true" """
-        """bandwidthIn="1001" bandwidthOut="19992"/&gt;&lt;/event&gt"""
-        """;</atom:content></atom:entry>""")
+        """.rackspace.com/event/nova" version="1" """
+        """id="e53d007a-fc23-11e1-975c-cfa6b29bb814" resourceId="56" """
+        """resourceName="test" dataCenter="ORD1" region="PREPROD-ORD" """
+        """tenantId="2882" startTime="2012-09-15T12:51:11Z" """
+        """endTime="2012-09-16T11:51:11Z" type="USAGE"><nova:product """
+        """version="1" serviceCode="CloudServersOpenStack" resourceType"""
+        """="SERVER" flavorId="10" flavorName="m1.nano" status="ACTIVE" """
+        """osLicenseType="RHEL" bandwidthIn="1001" bandwidthOut"""
+        """="19992"/></event></atom:content></atom:entry>""")
         self.mox.StubOutWithMock(httplib2.Http, """request""")
+        self.mox.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb815')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=body,
                               headers={'Content-Type': 'application/atom+xml'}
@@ -174,14 +177,14 @@ class CufPubTests(unittest.TestCase):
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<category term="image.exists.verified.cuf"></category>"""
         """<atom:title type="text">Glance"""
-        """</atom:title><atom:content type="application/xml">&lt;events&gt;&lt;"""
-        """event endTime="2013-09-02 23:59:59.999999" """
-        """startTime="2013-09-02 16:08:10" region="ORD1" """
+        """</atom:title><atom:content type="application/xml"><events><"""
+        """event endTime="2013-09-02T23:59:59Z" """
+        """startTime="2013-09-02T16:08:10Z" region="ORD1" """
         """dataCenter="PREPROD-ORD" type="USAGE" """
         """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image1" """
-        """tenantId="owner1" version="1"&gt; &lt;glance:product """
+        """tenantId="owner1" version="1"> <glance:product """
         """storage="12345" serverId="inst_uuid1" serviceCode="Glance" """
-        """serverName="" resourceType="snapshot" version="1"/&gt;&lt;/event&gt;&lt;/events&gt;"""
+        """serverName="" resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
         self.mox.StubOutWithMock(httplib2.Http, 'request')
@@ -242,18 +245,18 @@ class CufPubTests(unittest.TestCase):
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<category term="image.exists.verified.cuf"></category>"""
         """<atom:title type="text">Glance</atom:title><atom:content type="application/xml">"""
-        """&lt;events&gt;&lt;event endTime="2013-09-02 23:59:59.999999" startTime="2013-09-02 """
-        """16:08:10" region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
+        """<events><event endTime="2013-09-02T23:59:59Z" startTime="2013-09-02T"""
+        """16:08:10Z" region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
         """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image1" """
-        """tenantId="owner1" version="1"&gt; &lt;glance:product storage="12345" """
+        """tenantId="owner1" version="1"> <glance:product storage="12345" """
         """serverId="inst_uuid1" serviceCode="Glance" serverName="" """
-        """resourceType="snapshot" version="1"/&gt;&lt;/event&gt;&lt;event """
-        """endTime="2013-09-02 16:08:46" startTime="2013-09-02 16:05:17" """
+        """resourceType="snapshot" version="1"/></event><event """
+        """endTime="2013-09-02T16:08:46Z" startTime="2013-09-02T16:05:17Z" """
         """region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
         """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image2" """
-        """tenantId="owner1" version="1"&gt; &lt;glance:product storage="67890" """
+        """tenantId="owner1" version="1"> <glance:product storage="67890" """
         """serverId="inst_uuid2" serviceCode="Glance" serverName="" """
-        """resourceType="snapshot" version="1"/&gt;&lt;/event&gt;&lt;/events&gt;"""
+        """resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
         self.mox.StubOutWithMock(httplib2.Http, 'request')
