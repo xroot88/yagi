@@ -93,6 +93,7 @@ class CufPubTests(unittest.TestCase):
             {
                 'event_type': 'compute.instance.exists',
                 'message_id': 'some_uuid',
+                'original_message_id': 'original_uuid',
                 'payload':
                     {'tenant_id': '2882',
                      'access_ip_v4': '5.79.20.138',
@@ -117,8 +118,10 @@ class CufPubTests(unittest.TestCase):
 
         body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
         """<atom:entry xmlns:atom="http://www.w3.org"""
-        """/2005/Atom"><category term="compute.instance.exists.verified.cuf">"""
-        """</category><atom:title type="text">Server</atom:title>"""
+        """/2005/Atom"><atom:category term="compute.instance."""
+        """exists.verified.cuf"></atom:category><atom:category term"""
+        """="original_message_id:original_uuid">"""
+        """</atom:category><atom:title type="text">Server</atom:title>"""
         """<atom:content type="application/xml"><event xmlns="http://"""
         """docs.rackspace.com/core/event" xmlns:nova="http://docs"""
         """.rackspace.com/event/nova" version="1" """
@@ -150,6 +153,7 @@ class CufPubTests(unittest.TestCase):
             {"event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
             "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
+            "original_message_id": "some_uuid",
             "priority": "INFO",
             "publisher_id": "ubuntu",
             "payload": {
@@ -175,7 +179,8 @@ class CufPubTests(unittest.TestCase):
         """<atom:entry xmlns="http://docs.rackspace."""
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
-        """<category term="image.exists.verified.cuf"></category>"""
+        """<atom:category term="image.exists.verified.cuf"></atom:category>"""
+        """<atom:category term="original_message_id:some_uuid"></atom:category>"""
         """<atom:title type="text">Glance"""
         """</atom:title><atom:content type="application/xml"><events><"""
         """event endTime="2013-09-02T23:59:59Z" """
@@ -206,6 +211,7 @@ class CufPubTests(unittest.TestCase):
             {"event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
             "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
+            "original_message_id": "some_uuid",
             "priority": "INFO",
             "publisher_id": "ubuntu",
             "payload": {
@@ -243,7 +249,8 @@ class CufPubTests(unittest.TestCase):
         """<atom:entry xmlns="http://docs.rackspace."""
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
-        """<category term="image.exists.verified.cuf"></category>"""
+        """<atom:category term="image.exists.verified.cuf"></atom:category>"""
+        """<atom:category term="original_message_id:some_uuid"></atom:category>"""
         """<atom:title type="text">Glance</atom:title><atom:content type="application/xml">"""
         """<events><event endTime="2013-09-02T23:59:59Z" startTime="2013-09-02T"""
         """16:08:10Z" region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """

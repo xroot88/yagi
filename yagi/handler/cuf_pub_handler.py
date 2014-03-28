@@ -30,27 +30,28 @@ class CufPub(yagi.handler.BaseHandler):
         return str.replace(str.replace(payload_body, "&lt;", "<"), "&gt;", ">")
 
     def nova_cuf(self, deployment_info, payload):
-        cuf = Notification(payload). \
-            convert_to_verified_message_in_cuf_format(
+        notification = Notification(payload)
+        cuf = notification.convert_to_verified_message_in_cuf_format(
             {'region': deployment_info['REGION'],
              'data_center': deployment_info['DATACENTER']})
         entity = dict(content=cuf,
                       id=str(uuid.uuid4()),
-                      event_type='compute.instance.exists.verified.cuf')
+                      event_type='compute.instance.exists.verified.cuf',
+                      original_message_id=notification.get_original_message_id())
         payload_body = yagi.serializer.cuf.dump_item(entity)
         return self.unescape_strings(payload_body)
 
 
     def glance_cuf(self, deployment_info, payload):
-
-        cuf = GlanceNotification(payload). \
-            convert_to_verified_message_in_cuf_format(
+        glance_notification = GlanceNotification(payload)
+        cuf = glance_notification.convert_to_verified_message_in_cuf_format(
             {'region': deployment_info['DATACENTER'],
              'data_center': deployment_info['REGION']})
 
         entity = dict(content=cuf,
                       id=str(uuid.uuid4()),
-                      event_type='image.exists.verified.cuf')
+                      event_type='image.exists.verified.cuf',
+                      original_message_id=glance_notification.get_original_message_id())
         payload_body = yagi.serializer.cuf.dump_item(entity, service_title="Glance")
         return self.unescape_strings(payload_body)
 

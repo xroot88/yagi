@@ -48,11 +48,13 @@ def dump_item(entity, service_title="Server"):
         next_page_url=None)
 
     event_type = unicode(entity['event_type'])
+    original_message_id = unicode("original_message_id:{id}".format(id=
+                                  entity['original_message_id']))
     feed.add_item(
         title=unicode(entity['event_type']),
         link=_entity_link(entity['id'], entity['event_type']),
         description=event_type,
         contents=entity['content']['payload'],
-        categories=[event_type] + _categories())
+        categories=[event_type, original_message_id])
     feed.write_item(handler, feed.items[0], root=True, title=service_title)
     return outfile.getvalue()
