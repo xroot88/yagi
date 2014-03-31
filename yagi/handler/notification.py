@@ -58,6 +58,9 @@ class Notification(object):
         cuf_xml = self._create_cuf_xml(deployment_info, self.message)
         return {'payload': cuf_xml}
 
+    def get_original_message_id(self):
+        return self.message.get('original_message_id', "")
+
 
 class GlanceNotification(object):
     def __init__(self, message):
@@ -78,3 +81,6 @@ class GlanceNotification(object):
     def convert_to_verified_message_in_cuf_format(self, deployment_info):
         cuf_xml= self._create_cuf_xml(deployment_info, self.message)
         return {'payload': cuf_xml}
+
+    def get_original_message_id(self):
+        return self.message.get('original_message_id', "")
