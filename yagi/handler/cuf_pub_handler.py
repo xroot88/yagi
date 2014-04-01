@@ -77,15 +77,18 @@ class CufPub(yagi.handler.BaseHandler):
                 deployment_info = self.get_deployment_info(
                     deployment_info_string)
                 payload_body = ""
-                if "instance" in payload['event_type']:
+                if "instance.exists" in payload['event_type']:
+                    service = 'nova'
                     payload_body = self.nova_cuf(deployment_info, payload)
-                elif "image" in payload['event_type']:
+                elif "image.exists" in payload['event_type']:
+                    service = 'glance'
                     payload_body = self.glance_cuf(deployment_info, payload)
             except KeyError, e:
                 error_msg = "Malformed Notification: %s" % payload
                 LOG.error(error_msg)
                 LOG.exception(e)
-                results[msgid] = dict(error=True, code=0, message=error_msg)
+                results[msgid] = dict(error=True, code=0, message=error_msg,
+                                      service=service)
                 continue
 
             endpoint = self.config_get("url")
@@ -144,4 +147,5 @@ class CufPub(yagi.handler.BaseHandler):
                 if connection is None:
                     connection = HttpConnection(self,force=True)
 
-            results[msgid] = dict(error=False, code=code, message="Success")
+            results[msgid] = dict(error=False, code=code, message="Success",
+                                  service=service)

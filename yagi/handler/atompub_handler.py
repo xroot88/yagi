@@ -28,7 +28,8 @@ class AtomPub(yagi.handler.BaseHandler):
     CONFIG_SECTION = "atompub"
     AUTO_ACK = True
 
-    def note_result(self, env, payload, code=0, error=False, message=None):
+    def note_result(self, env, payload, code=0, error=False, message=None,
+                    service='nova'):
         name = self.__class__.__name__.lower() + ".results"
         results = env.get(name) if name in env else dict()
         msgid = payload["message_id"]
@@ -40,6 +41,7 @@ class AtomPub(yagi.handler.BaseHandler):
                 message = "Success"
         result['message'] = message
         result['code'] = code if not error else 0
+        result['service'] = service
 
         results[msgid] = result
         env[name] = results
@@ -169,6 +171,6 @@ class AtomPub(yagi.handler.BaseHandler):
             for notification_payload in notification_payloads:
                 code = self._send_notification(env, notification_payload,
                                                payload)
-                self.note_result(env, payload, code=code)
+                self.note_result(env, payload, code=code, service='nova')
 
 

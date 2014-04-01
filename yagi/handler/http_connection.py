@@ -7,14 +7,6 @@ import yagi.handler
 import yagi.log
 import yagi.serializer.atom
 
-with yagi.config.defaults_for("cufpub") as default:
-    default("validate_ssl", "False")
-    default("retries", "-1")
-    default("url", "http://127.0.0.1/nova")
-    default("max_wait", "600")
-    default("failures_before_reauth", "5")
-    default("interval", "30")
-
 LOG = yagi.log.logger
 
 class MessageDeliveryFailed(Exception):
