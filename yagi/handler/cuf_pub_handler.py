@@ -18,6 +18,7 @@ with yagi.config.defaults_for("cufpub") as default:
     default("max_wait", "600")
     default("failures_before_reauth", "5")
     default("interval", "30")
+    default("timeout", "120")
 
 LOG = yagi.log.logger
 

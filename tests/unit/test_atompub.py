@@ -36,7 +36,8 @@ class AtomPubTests(unittest.TestCase):
             'max_wait': 600,
             'retries': 1,
             'failures_before_reauth': 5,
-            'stacktach_down': 'False'
+            'stacktach_down': 'False',
+            'timeout': '120',
         },
         'event_feed': {
             'feed_title': 'feed_title',
