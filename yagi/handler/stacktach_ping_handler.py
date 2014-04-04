@@ -51,7 +51,7 @@ class StackTachPing(yagi.handler.BaseHandler):
         if not results:
             LOG.error("Stacktack ping handler cannot find any results!")
             return
-        pings = dict((n, {'nova': {}, 'glance': {}, 'version': 1})
+        pings = dict((n, {'nova': {}, 'glance': {}})
                      for n in results)
         for payload in self.iterate_payloads(messages, env):
             if self.match_event(payload):
@@ -63,7 +63,10 @@ class StackTachPing(yagi.handler.BaseHandler):
                     if st is not None:
                         code = st['code']
                         service = st['service']
-                        pings[result][service][ping_msgid] = code
+                        event_id = st.get('ah_event_id')
+                        pings[result][service][ping_msgid] = {'status': code}
+                        if event_id:
+                            pings[result][service][ping_msgid]['event_id'] = event_id
         url = self.config_get("url")
         for ping in pings.values():
             if ping:
@@ -74,7 +77,7 @@ class StackTachPing(yagi.handler.BaseHandler):
 
     def _post_to_st(self, url, ping):
         timeout = int(self.config_get("timeout"))
-        data = json.dumps(dict(messages=ping))
+        data = json.dumps(dict(messages=ping, version=2))
         try:
             res = requests.put(url, data=data,
                                timeout=timeout,

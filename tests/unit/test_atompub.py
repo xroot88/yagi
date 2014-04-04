@@ -83,12 +83,14 @@ class AtomPubTests(unittest.TestCase):
         messages = [MockMessage({'event_type': 'instance_create',
                     'message_id': 1,
                     'content': dict(a=3)})]
-
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""
+        """</atom:entry>""")
         self.called = False
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(201), None
+            return MockResponse(201), content
 
         self.stubs.Set(httplib2.Http, 'request', mock_request)
         self.handler.handle_messages(messages, dict())
@@ -115,12 +117,16 @@ class AtomPubTests(unittest.TestCase):
         exists_verified_payload = {
             'event_type': 'compute.instance.exists.verified',
             'message_id': message_id, 'content': dict(a=3)}
+        content = ("""entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<title type="text">compute.instance.exists.verified</title>"""
+        """<id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a<id>"""
+        """<entry>""")
         messages = [MockMessage(exists_payload)]
         self.called = False
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(404), None
+            return MockResponse(201), content
 
         AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
         new_message_id = '16fd2706-8baf-433b-82eb-8c7fada847da'
@@ -150,10 +156,14 @@ class AtomPubTests(unittest.TestCase):
                    'content': dict(a=3)}
         messages = [MockMessage(payload)]
         self.called = False
+        content = ("""entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<title type="text">compute.instance.exists.verified</title>"""
+        """<id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a<id>"""
+        """<entry>""")
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(404), None
+            return MockResponse(201), content
 
         AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
         AtomPubTests.config_dict['exclude_filters']['atompub'] = \
@@ -175,10 +185,13 @@ class AtomPubTests(unittest.TestCase):
                    'content': dict(a=3)}
         messages = [MockMessage(payload)]
         self.called = False
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""
+        """</atom:entry>""")
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(404), None
+            return MockResponse(201), content
 
         AtomPubTests.config_dict['atompub']['stacktach_down'] = 'True'
         self.mox.StubOutWithMock(yagi.serializer.atom, 'dump_item')

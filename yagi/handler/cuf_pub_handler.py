@@ -96,10 +96,13 @@ class CufPub(yagi.handler.BaseHandler):
             tries = 0
             failures = 0
             code = 0
+            ah_event_id = None
             while True:
                 try:
-                    code = connection.send_notification(endpoint, endpoint,
+                    response_details = connection.send_notification(endpoint, endpoint,
                                                          payload_body)
+                    code = response_details.get("status")
+                    ah_event_id = response_details.get("ah_event_id")
                     break
                 except InvalidContentException, e:
                     LOG.exception(e)
@@ -149,4 +152,4 @@ class CufPub(yagi.handler.BaseHandler):
                     connection = HttpConnection(self,force=True)
 
             results[msgid] = dict(error=False, code=code, message="Success",
-                                  service=service)
+                                  service=service, ah_event_id=ah_event_id)
