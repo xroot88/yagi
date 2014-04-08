@@ -32,7 +32,8 @@ class InvalidContentException(Exception):
 class HttpConnection():
     def __init__(self, handler,force=False):
         ssl_check = not (handler.config_get("validate_ssl") == "True")
-        self.conn = http_util.LimitingBodyHttp(
+        timeout = int(handler.config_get('timeout', default=120))
+        self.conn = http_util.LimitingBodyHttp(timeout=timeout,
                         disable_ssl_certificate_validation=ssl_check)
         auth_method = yagi.auth.get_auth_method()
         self.headers = {}

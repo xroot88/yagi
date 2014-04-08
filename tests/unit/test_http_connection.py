@@ -22,7 +22,8 @@ class HttpConnectionTests(unittest.TestCase):
                 'interval': 30,
                 'max_wait': 600,
                 'retries': 1,
-                'failures_before_reauth': 5
+                'failures_before_reauth': 5,
+                'timeout': '120',
             },
             'event_feed': {
                 'feed_title': 'feed_title',
@@ -40,7 +41,8 @@ class HttpConnectionTests(unittest.TestCase):
                 'interval': 30,
                 'max_wait': 600,
                 'retries': 1,
-                'failures_before_reauth': 5
+                'failures_before_reauth': 5,
+                'timeout': '120',
             }
         }
 
