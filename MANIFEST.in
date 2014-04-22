@@ -1,2 +1,3 @@
 include yagi.conf.default
 include README.md
+include requirements.txt
