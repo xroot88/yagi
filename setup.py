@@ -7,7 +7,8 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-install_reqs = [str(r.req) for r in parse_requirements("requirements.txt")]
+req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
+install_reqs = [str(r.req) for r in parse_requirements(req_file)]
 
 
 setup(
