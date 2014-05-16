@@ -70,7 +70,7 @@ class PagedFeed(feedgenerator.Atom1Feed):
         self.add_item_elements(handler, item)
         handler.addQuickElement(u"content",
                 json.dumps(clean_content(item['contents'])),
-                dict(type='application/json'))
+                dict(type=u'application/json'))
         handler.endElement(u"entry")
 
     def add_root_elements(self, handler):
@@ -92,13 +92,13 @@ class CufPagedFeed(feedgenerator.Atom1Feed):
     def root_attributes_for_cuf(self, title):
         if title == "Server":
             if self.feed['language'] is not None:
-                return {"xmlns:atom": self.ns, "xml:lang": self.feed['language']}
+                return {u"xmlns:atom": self.ns, u"xml:lang": self.feed['language']}
             else:
-                return {"xmlns:atom": self.ns}
+                return {u"xmlns:atom": self.ns}
         if title == "Glance":
-            return {"xmlns:atom": self.ns,
-                    "xmlns": "http://docs.rackspace.com/core/event",
-                    "xmlns:glance": "http://docs.rackspace.com/usage/glance"}
+            return {u"xmlns:atom": self.ns,
+                    u"xmlns": u"http://docs.rackspace.com/core/event",
+                    u"xmlns:glance": u"http://docs.rackspace.com/usage/glance"}
 
     # Get it to care about content elements
     def write_item(self, handler, item, root=False, title="Server"):
@@ -106,8 +106,8 @@ class CufPagedFeed(feedgenerator.Atom1Feed):
                              self.root_attributes_for_cuf(title) if root else {})
         for cat in item['categories']:
             handler.addQuickElement(u"atom:category", u"", {u"term": cat})
-        handler.addQuickElement(u"atom:title", attrs={"type": "text"}, contents=title)
+        handler.addQuickElement(u"atom:title", attrs={u"type": u"text"}, contents=title)
         handler.addQuickElement(u"atom:content",
                                 item['contents'],
-                                dict(type="application/xml"))
+                                dict(type=u"application/xml"))
         handler.endElement(u"atom:entry")
