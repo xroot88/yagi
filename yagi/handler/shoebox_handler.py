@@ -32,7 +32,7 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
                 os.makedirs(d)
         template=self.config.get('filename_template',
                                  'events_%Y_%m_%d_%X_%f.dat')
-        cb = simport.load(self.config['callback'])(config=self.config)
+        cb = simport.load(self.config['callback'])(**self.config)
         self.roll_manager = roll_manager.WritingRollManager(template,
                                 self.roll_checker, self.working_directory,
                                 archive_callback=cb)
