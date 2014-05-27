@@ -17,12 +17,14 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
 
     def __init__(self, app=None, queue_name=None):
         super(ShoeboxHandler, self).__init__(app, queue_name)
-        self.config = yagi.config.get("shoebox", {})
-        self.roll_checker = simport.load('roll_checker')(**self.config)
+        # Don't use interpolation from ConfigParser ...
+        self.config = dict(yagi.config.config.items('shoebox', raw=True))
+        roll_checker = self.config['roll_checker']
+        self.roll_checker = simport.load(roll_checker)(**self.config)
         self.working_directory = self.config.get('working_directory', '.')
         template=self.config.get('filename_template',
                                  'events_%Y_%m_%d_%X_%f.dat')
-        cb = simport.load(yagi.config.get('callback'))(config=self.config)
+        cb = simport.load(self.config['callback'])(config=self.config)
         self.roll_manager = roll_manager.WritingRollManager(template,
                                 roll_checker, self.working_directory,
                                 archive_callback=cb)
