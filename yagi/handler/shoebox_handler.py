@@ -16,7 +16,7 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
     """
 
     def __init__(self, app=None, queue_name=None):
-        super(ShoeboxHandler, self).__init_(app, queue_name)
+        super(ShoeboxHandler, self).__init__(app, queue_name)
         self.config = yagi.config.get("shoebox", {})
         self.roll_checker = simport.load('roll_checker')(**self.config)
         self.working_directory = self.config.get('working_directory', '.')
