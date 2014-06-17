@@ -1,3 +1,4 @@
+import BeautifulSoup
 from yagi import http_util
 import time
 
@@ -58,11 +59,23 @@ class HttpConnection():
             resp, content = self.conn.request(endpoint, "POST",
                                               body=body,
                                               headers=self.headers)
+            response_details = {"status": resp.status}
+            if resp.status == 201:
+                parsed_content = BeautifulSoup.BeautifulSoup(content)
+                atom_id_tag = parsed_content.find('atom:id')
+                if atom_id_tag:
+                    ah_event_id = atom_id_tag.string.replace('urn:uuid:', '')
+                    response_details.update({"ah_event_id": ah_event_id})
+                elif "compute.instance.exists.verified" in parsed_content.find("title"):
+                    id_tag = parsed_content.find('id')
+                    if id_tag:
+                        ah_event_id = id_tag.string.replace('urn:uuid:', '')
+                        response_details.update({"ah_event_id": ah_event_id})
             if resp.status == 401:
                 raise UnauthorizedException("Unauthorized or token expired")
             if resp.status == 409:
                 #message id already exists. this is a dup, don't resend.
-                return resp.status
+                return response_details
             if resp.status == 400:
                 msg = ("%s resource create failed for %s Status: "
                             "%s, %s" % (self.handler, puburl, resp.status,
@@ -73,7 +86,7 @@ class HttpConnection():
                             "%s, %s" % (self.handler, puburl, resp.status,
                                         content))
                 raise MessageDeliveryFailed(msg, resp.status)
-            return resp.status
+            return response_details
         except http_util.ResponseTooLargeError, e:
             if e.response.status == 201:
                 # Was successfully created. Reply was just too large.

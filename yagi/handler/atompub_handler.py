@@ -30,7 +30,7 @@ class AtomPub(yagi.handler.BaseHandler):
     AUTO_ACK = True
 
     def note_result(self, env, payload, code=0, error=False, message=None,
-                    service='nova'):
+                    service='nova', ah_event_id=None):
         name = self.__class__.__name__.lower() + ".results"
         results = env.get(name) if name in env else dict()
         msgid = payload["message_id"]
@@ -40,6 +40,8 @@ class AtomPub(yagi.handler.BaseHandler):
                 message = "Error, unable to send notification"
             else:
                 message = "Success"
+        if ah_event_id:
+            result['ah_event_id'] = ah_event_id
         result['message'] = message
         result['code'] = code if not error else 0
         result['service'] = service
@@ -91,6 +93,7 @@ class AtomPub(yagi.handler.BaseHandler):
         max_wait = int(self.config_get("max_wait"))
         failures_before_reauth = int(self.config_get("failures_before_reauth"))
         endpoint = self.config_get("url")
+        ah_event_id = ""
         tries = 0
         failures = 0
         code = 0
@@ -98,8 +101,10 @@ class AtomPub(yagi.handler.BaseHandler):
         connection = HttpConnection(self)
         while True:
             try:
-                code = connection.send_notification(
+                response_details = connection.send_notification(
                     endpoint, endpoint, notification_payload)
+                code = response_details.get("status")
+                ah_event_id = response_details.get("ah_event_id")
                 error = False
                 msg = ''
                 break
@@ -146,7 +151,7 @@ class AtomPub(yagi.handler.BaseHandler):
                 connection = None
             if connection is None:
                 connection = HttpConnection(self, force=True)
-        return code
+        return code, ah_event_id
 
     def handle_messages(self, messages, env):
         entity_links = self.config_get("generate_entity_links") == "True"
@@ -170,8 +175,12 @@ class AtomPub(yagi.handler.BaseHandler):
                 self.note_result(env, payload, error=True, message=error_msg)
                 continue
             for notification_payload in notification_payloads:
-                code = self._send_notification(env, notification_payload,
+                code, ah_event_id = self._send_notification(env, notification_payload,
                                                payload)
-                self.note_result(env, payload, code=code, service='nova')
+                if ah_event_id:
+                    self.note_result(env, payload, code=code, service='nova',
+                                     ah_event_id=ah_event_id)
+                else:
+                    self.note_result(env, payload, code=code, service='nova')
 
 

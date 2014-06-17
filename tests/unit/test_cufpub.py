@@ -137,12 +137,14 @@ class CufPubTests(unittest.TestCase):
         """="19992"/></event></atom:content></atom:entry>""")
         self.mox.StubOutWithMock(httplib2.Http, """request""")
         self.mox.StubOutWithMock(uuid, 'uuid4')
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
         uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
         uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb815')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=body,
                               headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), None))
+        ).AndReturn((MockResponse(201), content))
 
         self.mox.ReplayAll()
 
@@ -194,11 +196,13 @@ class CufPubTests(unittest.TestCase):
         """serverName="" resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
         self.mox.StubOutWithMock(httplib2.Http, 'request')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=cuf_xml_body,
                               headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), None))
+        ).AndReturn((MockResponse(201), content))
         self.mox.StubOutWithMock(uuid, 'uuid4')
         uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")
         uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")
@@ -268,11 +272,13 @@ class CufPubTests(unittest.TestCase):
         """resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
         self.mox.StubOutWithMock(httplib2.Http, 'request')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=cuf_xml_body,
                               headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), None))
+        ).AndReturn((MockResponse(201), content))
         self.mox.StubOutWithMock(uuid, 'uuid4')
         for i in range(0,3):
             uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")

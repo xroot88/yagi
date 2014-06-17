@@ -1,5 +1,6 @@
 import unittest
 import httplib2
+import mox
 from yagi import http_util
 from tests.unit.test_cufpub import MockMessage, MockResponse
 from yagi.handler.atompub_handler import UnauthorizedException, MessageDeliveryFailed
@@ -14,6 +15,7 @@ class HttpConnectionTests(unittest.TestCase):
 
     def setUp(self):
         self.stubs = stubout.StubOutForTesting()
+        self.mox = mox.Mox()
         config_dict = {
             'atompub': {
                 'url': 'http://127.0.0.1:9000/test/%(event_type)s',
@@ -70,17 +72,23 @@ class HttpConnectionTests(unittest.TestCase):
 
     def test_send_notification_successfully(self):
         self.called = False
+        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
+        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""
+        """</atom:entry>""")
 
         def mock_request(*args, **kwargs):
             self.called = True
-            return MockResponse(201), None
+            return MockResponse(201), content
 
         handler = CufPub()
         http_conn = HttpConnection(handler)
         endpoint = handler.config_get("url")
         payload_body = {"a":"b"}
+        self.mox.ReplayAll()
+
         self.stubs.Set(httplib2.Http, 'request', mock_request)
         http_conn.send_notification(endpoint, endpoint, payload_body)
+        self.mox.VerifyAll()
 
     def test_response_401_raises_unauthorized_exception(self):
         self.called = False
@@ -161,7 +169,7 @@ class HttpConnectionTests(unittest.TestCase):
         self.stubs.Set(httplib2.Http, 'request', mock_request)
 
         status = http_conn.send_notification(endpoint, endpoint, payload_body)
-        self.assertEqual(status,409)
+        self.assertEqual({'status': 409}, status)
 
     def test_response_status_400_raises_invalid_content_exception(self):
         self.called = False

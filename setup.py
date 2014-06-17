@@ -32,6 +32,5 @@ setup(
     scripts=['bin/yagi-feed', 'bin/yagi-event'],
     long_description=read('README.md'),
     install_requires=install_reqs,
-
     zip_safe=False
 )
