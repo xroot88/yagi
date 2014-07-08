@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 import uuid
 from yagi import stats
 import yagi
@@ -20,8 +21,7 @@ with yagi.config.defaults_for("cufpub") as default:
     default("interval", "30")
     default("timeout", "120")
 
-LOG = yagi.log.logger
-
+LOG = logging.getLogger(__name__)
 
 class CufPub(yagi.handler.BaseHandler):
     CONFIG_SECTION = "cufpub"

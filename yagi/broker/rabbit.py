@@ -1,13 +1,13 @@
 import datetime
 import socket
 import time
+import logging
 
 import amqplib
 from carrot.connection import BrokerConnection
 from carrot.messaging import Consumer
 
 from yagi import config as conf
-import yagi.log
 
 with conf.defaults_for("global") as default:
     default("update_timer", 300)
@@ -23,8 +23,7 @@ with conf.defaults_for("rabbit_broker") as default:
     default("max_wait", 600)
     default("max_connection_age", 14400)
 
-LOG = yagi.log.logger
-
+LOG = logging.getLogger(__name__)
 
 def confbool(val):
     if val in ("Default", None, "None"):

@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 
 from contextlib import contextmanager
@@ -81,8 +82,7 @@ def defaults_for(section):
 
 def lazy_load_config(fun):
     def decorate(*args, **kwargs):
-        import yagi.log
-        LOG = yagi.log.logger
+        LOG = logging.getLogger(__name__)
         global config
         if not config:
             config = parse_conf()

@@ -1,10 +1,10 @@
 import json
+import logging
 import requests
 import time
 
 import yagi.config
 import yagi.handler
-import yagi.log
 
 with yagi.config.defaults_for("stacktach") as default:
     default("timeout", "120")
@@ -12,7 +12,7 @@ with yagi.config.defaults_for("stacktach") as default:
     default("ping_events", "compute.instance.exists.verified.old")
     default("results_from", "atompub.results")
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 
 class StackTachPing(yagi.handler.BaseHandler):

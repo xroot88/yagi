@@ -1,4 +1,6 @@
 import logging
+from logging.handlers import WatchedFileHandler
+from logging.config import fileConfig
 
 import yagi.config
 
@@ -6,11 +8,11 @@ logger = logging
 
 with yagi.config.defaults_for('logging') as default:
     default('logfile', 'yagi.log')
-    default('default_level', 'WARN')
+    default('default_level', 'INFO')
     default('logger', 'logging')
+    default("config_file", "")
 
-
-FORMAT = "[%(levelname)s at %(asctime)s line: %(lineno)d] "\
+FORMAT = "%(name)s[%(levelname)s at %(asctime)s line: %(lineno)d] "\
          "%(message)s"
 
 
@@ -25,7 +27,7 @@ class YagiLogger(logging.Logger):
         handlers.append(stream_handler)
         logfile = yagi.config.get('logging', 'logfile')
         if logfile:
-            file_handler = logging.FileHandler(filename=logfile)
+            file_handler = WatchedFileHandler(filename=logfile)
             file_handler.setFormatter(formatter)
             handlers.append(file_handler)
         for handler in handlers:
@@ -33,5 +35,10 @@ class YagiLogger(logging.Logger):
 
 
 def setup_logging():
-    logging.root = YagiLogger("YagiLogger")
-    logging.setLoggerClass(YagiLogger)
+    config_file = yagi.config.get('logging', 'config_file')
+    if config_file:
+        #if a logging configfile exists, it overrides everything else.
+        fileConfig(config_file)
+    else:
+        logging.root = YagiLogger("YagiLogger")
+        logging.setLoggerClass(YagiLogger)

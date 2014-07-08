@@ -1,14 +1,15 @@
 import BeautifulSoup
+import logging
+
 from yagi import http_util
 import time
 
 import yagi.auth
 import yagi.config
 import yagi.handler
-import yagi.log
 import yagi.serializer.atom
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 class MessageDeliveryFailed(Exception):
     def __init__(self, msg, code, *args):

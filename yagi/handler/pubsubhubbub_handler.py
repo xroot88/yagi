@@ -1,15 +1,16 @@
+import logging
 import pubsubhubbub_publish
 
 import yagi.config
 import yagi.handler
-import yagi.log
 
 
 with yagi.config.defaults_for('hub') as default:
     default('host', '127.0.0.1')
     default('port', '8000')
 
-LOG = yagi.log.logger
+
+LOG = logging.getLogger(__name__)
 
 
 class PubSubHubBubHandler(yagi.handler.BaseHandler):

@@ -1,8 +1,9 @@
 from ConfigParser import NoSectionError, NoOptionError
+import logging
 import yagi.config
-import yagi.log
 
-LOG = yagi.log.logger
+
+LOG = logging.getLogger(__name__)
 
 
 class BaseHandler(object):
