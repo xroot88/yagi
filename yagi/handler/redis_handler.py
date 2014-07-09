@@ -1,8 +1,9 @@
+import logging
+
 import yagi.handler
-import yagi.log
 import yagi.persistence
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 event_attributes = ['message_id', 'publisher_id', 'event_type', 'priority',
                     'payload', 'timestamp']

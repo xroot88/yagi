@@ -1,9 +1,9 @@
+import logging
 import yagi.commandline
 from yagi.consumer import Consumer
 import yagi.event_worker
-import yagi.log
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 consumers = []
 

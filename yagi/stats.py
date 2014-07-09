@@ -5,12 +5,12 @@
 # new dependency at this time.
 
 import socket
+import logging
 
 import yagi.config
-import yagi.log
 
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 DRIVER = None
 
@@ -26,7 +26,7 @@ class StatsD(object):
             sock.connect((host, port))
             sock.sendall(data)
         except socket.error:
-            LOG.exception()
+            LOG.exception('Socket error sending statsd data.')
 
     def failure_message(self):
         return yagi.config.get("stats", "failure", default="yagi.failure")

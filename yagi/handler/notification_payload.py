@@ -1,9 +1,9 @@
 import datetime
+import logging
 import uuid
 import yagi
-import yagi.log
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 
 def start_time(launched_at, audit_period_beginning):
@@ -28,7 +28,7 @@ def format_time(time,return_in_datetime_format=False):
                     # Old way of doing it, no millis
                     time = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%S")
                 except Exception, e:
-                    print "BAD DATE: ", e
+                    LOG.exception("BAD DATE: %s", time)
         else:
             try:
                 time = datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")
@@ -39,7 +39,7 @@ def format_time(time,return_in_datetime_format=False):
                     try:
                         time = datetime.datetime.strptime(time, "%d %m %Y %H:%M:%S")
                     except Exception, e:
-                        print "BAD DATE: ", e
+                        LOG.exception("BAD DATE: %s", time)
         if return_in_datetime_format:
             return time
         return str(time)

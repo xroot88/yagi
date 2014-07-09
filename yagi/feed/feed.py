@@ -1,14 +1,14 @@
 import eventlet
 from eventlet import wsgi
+import logging
 import webob
 import webob.dec
 
 import yagi.config
-import yagi.log
 import yagi.persistence
 import yagi.serializer
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 with yagi.config.defaults_for('event_feed') as default:
     default('pagesize', '1000')

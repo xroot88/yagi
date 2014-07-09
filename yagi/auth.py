@@ -1,12 +1,12 @@
 import json
 
 import httplib2
+import logging
 
 import yagi.config
-import yagi.log
 
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 
 token = None

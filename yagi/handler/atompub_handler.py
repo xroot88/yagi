@@ -1,4 +1,5 @@
 import copy
+import logging
 import time
 import uuid
 
@@ -8,9 +9,9 @@ import yagi.handler
 from yagi.handler.http_connection import HttpConnection
 from yagi.handler.http_connection import MessageDeliveryFailed
 from yagi.handler.http_connection import UnauthorizedException
-import yagi.log
 import yagi.serializer.atom
 from yagi import stats
+
 
 with yagi.config.defaults_for("atompub") as default:
     default("validate_ssl", "False")
@@ -22,7 +23,8 @@ with yagi.config.defaults_for("atompub") as default:
     default("interval", "30")
     default("timeout", "120")
 
-LOG = yagi.log.logger
+
+LOG = logging.getLogger(__name__)
 
 
 class AtomPub(yagi.handler.BaseHandler):

@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import notification_utils
@@ -7,10 +8,9 @@ import simport
 
 import yagi.config
 import yagi.handler
-import yagi.log
 import yagi.utils
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 
 class ShoeboxHandler(yagi.handler.BaseHandler):
@@ -44,5 +44,5 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
             metadata = {}
             json_event = json.dumps(payload,
                                     cls=notification_utils.DateTimeEncoder)
-            print ">", payload
+            LOG.debug("shoebox writing payload: %s" % str(payload))
             self.roll_manager.write(metadata, json_event)

@@ -1,13 +1,14 @@
 import datetime
+import logging
 import time
 
 import yagi.config
 import yagi.filters
-import yagi.log
 import yagi.stats
 import yagi.utils
 
-LOG = yagi.log.logger
+
+LOG = logging.getLogger(__name__)
 
 
 class Consumer(object):

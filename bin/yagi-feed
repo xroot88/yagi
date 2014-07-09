@@ -2,6 +2,7 @@
 
 import os
 import sys
+import logging
 
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
@@ -14,7 +15,7 @@ import yagi.config
 import yagi.feed.feed
 import yagi.log
 
-LOG = yagi.log.logger
+LOG = logging.getLogger("yagi.feed")
 
 if __name__ == '__main__':
     args = yagi.commandline.parse_args('Yagi Event Worker')

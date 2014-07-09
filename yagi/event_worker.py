@@ -1,8 +1,8 @@
+import logging
 import yagi.config
-import yagi.log
 import yagi.utils
 
-LOG = yagi.log.logger
+LOG = logging.getLogger(__name__)
 
 with yagi.config.defaults_for('event_worker') as default:
     default('pidfile', 'yagi_event_worker.pid')
