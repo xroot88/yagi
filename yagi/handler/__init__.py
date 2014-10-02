@@ -57,6 +57,18 @@ class BaseHandler(object):
             pass
         return messages
 
+    def idle(self, num_messages, queue_name):
+        if self.app:
+            self.app.on_idle(num_messages, queue_name)
+
+        # Separate method call so derived class doesn't
+        # need to remember to call the base class.
+        self.on_idle(num_messages, queue_name)
+
+    def on_idle(self, num_messages):
+        # Do nothing. It's ok to not implement this method.
+        pass
+
     def __call__(self, messages, env=None):
         if env is None:
             env = dict()

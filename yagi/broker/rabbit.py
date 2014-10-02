@@ -203,8 +203,15 @@ class Broker(object):
                                     (float(total_messages) / elapsed))
 
                     start_time = datetime.datetime.now()
-                    messages_sent = {}
 
+                    # Periodically call the consumers in case they need
+                    # to do some work even when there are no events to
+                    # process ...
+                    for consumer in self.consumers:
+                        consumer.idle(messages_sent[consumer.queue_name],
+                                      consumer.queue_name)
+
+                    messages_sent = {}
                 # This should really only be used when trying to discern bugs
                 # in the flood of messages and coupled with DEBUG logging.
                 # Otherwise, we want Yagi sending as quickly as possible

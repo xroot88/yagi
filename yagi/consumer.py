@@ -57,6 +57,12 @@ class Consumer(object):
         self.connection = None
         self.consumer = None
 
+    def idle(self, num_messages, queue_name):
+        try:
+            self.app.idle(num_messages, queue_name)
+        except Exception as e:
+            LOG.exception("Error in idle(): \n%s" % e)
+
     def fetched_messages(self, messages):
         if self.filters:
             env = {'yagi.filters': self.filters}
