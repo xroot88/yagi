@@ -10,5 +10,5 @@ PubSubHubbub_Publisher
 requests
 routes
 WebOb
-daemon
+python-daemon
 BeautifulSoup
