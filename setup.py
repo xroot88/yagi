@@ -1,15 +1,9 @@
 import os
-from pip.req import parse_requirements
 from setuptools import setup, find_packages
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
-req_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
-install_reqs = [str(r.req) for r in parse_requirements(req_file)]
-
 
 setup(
     name='yagi',
@@ -31,6 +25,21 @@ setup(
     url='https://github.com/Cerberus98/yagi',
     scripts=['bin/yagi-feed', 'bin/yagi-event'],
     long_description=read('README.md'),
-    install_requires=install_reqs,
+    install_requires=[
+        "anyjson",
+        "redis",
+        "argparse",
+        "carrot",
+        "eventlet",
+        "python-dateutil",
+        "feedgenerator",
+        "httplib2",
+        "PubSubHubbub_Publisher",
+        "requests",
+        "routes",
+        "WebOb",
+        "python-daemon",
+        "BeautifulSoup",
+    ],
     zip_safe=False
 )

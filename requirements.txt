@@ -1,14 +1,1 @@
-anyjson
-redis
-argparse
-carrot
-eventlet
-python-dateutil
-feedgenerator
-httplib2
-PubSubHubbub_Publisher
-requests
-routes
-WebOb
-python-daemon
-BeautifulSoup
+-e .
