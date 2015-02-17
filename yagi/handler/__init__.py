@@ -65,7 +65,7 @@ class BaseHandler(object):
         # need to remember to call the base class.
         self.on_idle(num_messages, queue_name)
 
-    def on_idle(self, num_messages):
+    def on_idle(self, num_messages, queue_name):
         # Do nothing. It's ok to not implement this method.
         pass
 
