@@ -23,8 +23,10 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
         super(ShoeboxHandler, self).__init__(app, queue_name)
         # Don't use interpolation from ConfigParser ...
         self.config = dict(yagi.config.config.items('shoebox', raw=True))
-        roll_checker_str = self.config['roll_checker']
-        self.roll_checker = simport.load(roll_checker_str)(**self.config)
+        roll_checker_str = self.config.get('roll_checker')
+        self.roll_checker = None
+        if roll_checker_str:
+            self.roll_checker = simport.load(roll_checker_str)(**self.config)
         self.working_directory = self.config.get('working_directory', '.')
         self.destination_folder = self.config.get('destination_folder', '.')
         for d in [self.working_directory, self.destination_folder]:
@@ -32,10 +34,17 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
                 os.makedirs(d)
         template=self.config.get('filename_template',
                                  'events_%Y_%m_%d_%X_%f.dat')
-        cb = simport.load(self.config['callback'])(**self.config)
-        self.roll_manager = roll_manager.WritingRollManager(template,
-                                self.roll_checker, self.working_directory,
-                                archive_callback=cb)
+        callback_str = self.config.get('callback')
+        cb = None
+        if callback_str:
+            cb = simport.load(callback_str)(**self.config)
+
+        roll_manager_str = self.config.get('roll_manager',
+                                    'shoebox.roll_manager:WritingRollManager')
+
+        self.roll_manager = simport.load(roll_manager_str)(template,
+                        self.roll_checker, directory=self.working_directory,
+                        archive_callback=cb)
 
     def handle_messages(self, messages, env):
         # TODO(sandy): iterate_payloads filters messages first ... not
