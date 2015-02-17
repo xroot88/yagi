@@ -43,8 +43,8 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
                                     'shoebox.roll_manager:WritingRollManager')
 
         self.roll_manager = simport.load(roll_manager_str)(template,
-                                self.roll_checker, self.working_directory,
-                                archive_callback=cb)
+                        self.roll_checker, directory=self.working_directory,
+                        archive_callback=cb)
 
     def handle_messages(self, messages, env):
         # TODO(sandy): iterate_payloads filters messages first ... not

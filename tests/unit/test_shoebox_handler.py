@@ -43,8 +43,13 @@ class TestShoeboxHandler(unittest.TestCase):
 
     def test_json_roll_manager(self):
         config.config = mock.MagicMock()
-        config.config.return_value = {
-                'roll_manager': 'shoebox.roll_manager:WritingJSONRollManager'}
-        sh = shoebox_handler.ShoeboxHandler()
-        self.assertTrue(sh.roll_manager is not None)
+        config.config.items.return_value = {
+                'working_directory': 'foo',
+                'roll_manager':
+                    'shoebox.roll_manager:WritingJSONRollManager'}.items()
+        with mock.patch.object(shoebox_handler.os.path, "isdir") as isdir:
+            isdir.return_value = True
+            sh = shoebox_handler.ShoeboxHandler()
+            self.assertTrue(sh.roll_manager is not None)
+            self.assertEquals(sh.roll_manager.directory, 'foo')
 
