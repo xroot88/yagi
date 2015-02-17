@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name='yagi',
-    version='0.13',
+    version='0.14',
     author='Matthew Dietz, Monsyne Dragon',
     author_email='matthew.dietz@gmail.com, mdragon@rackspace.com',
     description=("A PubSubHubBub Publisher and ATOM feed generator that "
@@ -22,7 +22,7 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 2.6'
     ],
-    url='https://github.com/Cerberus98/yagi',
+    url='https://github.com/rackerlabs/yagi',
     scripts=['bin/yagi-feed', 'bin/yagi-event'],
     long_description=read('README.md'),
     install_requires=[
