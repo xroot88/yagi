@@ -42,9 +42,15 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
         roll_manager_str = self.config.get('roll_manager',
                                     'shoebox.roll_manager:WritingRollManager')
 
+        # Hack(sandy): These sorts of parameters should be left to the
+        # callback handlers. Just need it here to get over the hump.
+        # Needs to be refactored.
+        roll_size_mb = self.config.get('roll_size_mb', 1000)
+
         self.roll_manager = simport.load(roll_manager_str)(template,
                         self.roll_checker, directory=self.working_directory,
-                        archive_callback=cb)
+                        destination_directory=self.destination_folder,
+                        archive_callback=cb, roll_size_mb=roll_size_mb)
 
     def handle_messages(self, messages, env):
         # TODO(sandy): iterate_payloads filters messages first ... not
