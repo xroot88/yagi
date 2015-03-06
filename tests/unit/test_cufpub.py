@@ -91,11 +91,12 @@ class CufPubTests(unittest.TestCase):
         self.mox.UnsetStubs()
 
     def test_notify_for_instance_exists_message(self):
+        original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {
                 'event_type': 'compute.instance.exists',
                 'message_id': 'some_uuid',
-                'original_message_id': 'original_uuid',
+                'original_message_id': original_message_id,
                 'payload':
                     {'tenant_id': '2882',
                      'access_ip_v4': '5.79.20.138',
@@ -122,12 +123,12 @@ class CufPubTests(unittest.TestCase):
         """<atom:entry xmlns:atom="http://www.w3.org"""
         """/2005/Atom"><atom:category term="compute.instance."""
         """exists.verified.cuf"></atom:category><atom:category term"""
-        """="original_message_id:original_uuid">"""
+        """="original_message_id:425b23c9-9add-409f-938e-c131f304602a">"""
         """</atom:category><atom:title type="text">Server</atom:title>"""
         """<atom:content type="application/xml"><event xmlns="http://"""
         """docs.rackspace.com/core/event" xmlns:nova="http://docs"""
         """.rackspace.com/event/nova" version="1" """
-        """id="e53d007a-fc23-11e1-975c-cfa6b29bb814" resourceId="56" """
+        """id="10c3e7b3-2ac3-5c93-bc4f-ae32e61d9190" resourceId="56" """
         """resourceName="test" dataCenter="ORD1" region="PREPROD-ORD" """
         """tenantId="2882" startTime="2012-09-15T12:51:11Z" """
         """endTime="2012-09-16T11:51:11Z" type="USAGE"><nova:product """
@@ -136,11 +137,8 @@ class CufPubTests(unittest.TestCase):
         """osLicenseType="RHEL" bandwidthIn="1001" bandwidthOut"""
         """="19992"/></event></atom:content></atom:entry>""")
         self.mox.StubOutWithMock(httplib2.Http, """request""")
-        self.mox.StubOutWithMock(uuid, 'uuid4')
         content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
         """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
-        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
-        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb815')
         httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
                               'POST', body=body,
                               headers={'Content-Type': 'application/atom+xml'}
@@ -153,11 +151,12 @@ class CufPubTests(unittest.TestCase):
         self.mox.VerifyAll()
 
     def test_notify_for_image_exists_message_for_one_image(self):
+        original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {"event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
             "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
-            "original_message_id": "some_uuid",
+            "original_message_id": original_message_id,
             "priority": "INFO",
             "publisher_id": "ubuntu",
             "payload": {
@@ -184,13 +183,13 @@ class CufPubTests(unittest.TestCase):
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<atom:category term="image.exists.verified.cuf"></atom:category>"""
-        """<atom:category term="original_message_id:some_uuid"></atom:category>"""
+        """<atom:category term="original_message_id:425b23c9-9add-409f-938e-c131f304602a"></atom:category>"""
         """<atom:title type="text">Glance"""
         """</atom:title><atom:content type="application/xml"><events><"""
         """event endTime="2013-09-02T23:59:59Z" """
         """startTime="2013-09-02T16:08:10Z" region="ORD1" """
         """dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image1" """
+        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product """
         """storage="12345" serverId="inst_uuid1" serviceCode="Glance" """
         """serverName="" resourceType="snapshot" version="1"/></event></events>"""
@@ -203,9 +202,6 @@ class CufPubTests(unittest.TestCase):
                               'POST', body=cuf_xml_body,
                               headers={'Content-Type': 'application/atom+xml'}
         ).AndReturn((MockResponse(201), content))
-        self.mox.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")
-        uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")
         self.mox.ReplayAll()
 
         self.handler.handle_messages(messages, dict())
@@ -213,11 +209,12 @@ class CufPubTests(unittest.TestCase):
         self.mox.VerifyAll()
 
     def test_notify_for_image_exists_message_for_more_than_one_image(self):
+        original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {"event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
             "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
-            "original_message_id": "some_uuid",
+            "original_message_id": original_message_id,
             "priority": "INFO",
             "publisher_id": "ubuntu",
             "payload": {
@@ -256,17 +253,17 @@ class CufPubTests(unittest.TestCase):
         """com/core/event" xmlns:atom="http://www.w3.org/2005/Atom" """
         """xmlns:glance="http://docs.rackspace.com/usage/glance">"""
         """<atom:category term="image.exists.verified.cuf"></atom:category>"""
-        """<atom:category term="original_message_id:some_uuid"></atom:category>"""
+        """<atom:category term="original_message_id:425b23c9-9add-409f-938e-c131f304602a"></atom:category>"""
         """<atom:title type="text">Glance</atom:title><atom:content type="application/xml">"""
         """<events><event endTime="2013-09-02T23:59:59Z" startTime="2013-09-02T"""
         """16:08:10Z" region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image1" """
+        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product storage="12345" """
         """serverId="inst_uuid1" serviceCode="Glance" serverName="" """
         """resourceType="snapshot" version="1"/></event><event """
         """endTime="2013-09-02T16:08:46Z" startTime="2013-09-02T16:05:17Z" """
         """region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="a70508f3-7254-4abc-9e14-49de6bb4d628" resourceId="image2" """
+        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image2" """
         """tenantId="owner1" version="1"> <glance:product storage="67890" """
         """serverId="inst_uuid2" serviceCode="Glance" serverName="" """
         """resourceType="snapshot" version="1"/></event></events>"""
@@ -279,9 +276,6 @@ class CufPubTests(unittest.TestCase):
                               'POST', body=cuf_xml_body,
                               headers={'Content-Type': 'application/atom+xml'}
         ).AndReturn((MockResponse(201), content))
-        self.mox.StubOutWithMock(uuid, 'uuid4')
-        for i in range(0,3):
-            uuid.uuid4().AndReturn("a70508f3-7254-4abc-9e14-49de6bb4d628")
         self.mox.ReplayAll()
 
         self.handler.handle_messages(messages, dict())
