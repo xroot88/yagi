@@ -54,7 +54,7 @@ class HttpConnection():
             raise Exception("Invalid auth or no auth supplied")
 
     def send_notification(self, endpoint, puburl, body):
-        LOG.debug("Sending message to %s with body: %s" % (endpoint, body))
+        LOG.info("Sending message to %s with body: %s" % (endpoint, body))
         self.headers["Content-Type"] = "application/atom+xml"
         try:
             resp, content = self.conn.request(endpoint, "POST",
@@ -63,6 +63,7 @@ class HttpConnection():
             response_details = {"status": resp.status}
             if resp.status == 201:
                 parsed_content = BeautifulSoup.BeautifulSoup(content)
+                id_tag = "?"
                 atom_id_tag = parsed_content.find('atom:id')
                 if atom_id_tag:
                     ah_event_id = atom_id_tag.string.replace('urn:uuid:', '')
@@ -72,6 +73,8 @@ class HttpConnection():
                     if id_tag:
                         ah_event_id = id_tag.string.replace('urn:uuid:', '')
                         response_details.update({"ah_event_id": ah_event_id})
+                LOG.info("Successfully sent - ah_event_id: %s (%s, %s)" %
+                                    (ah_event_id, atom_id_tag, id_tag))
             if resp.status == 401:
                 raise UnauthorizedException("Unauthorized or token expired")
             if resp.status == 409:
