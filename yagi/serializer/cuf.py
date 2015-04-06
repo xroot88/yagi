@@ -14,9 +14,11 @@ def _entity_url():
     feed_host = conf('feed_host')
     use_https = yagi.config.get_bool('event_feed', 'use_https')
     scheme = "%s://" % ('https' if use_https else 'http')
-    port = conf('port') or ''
-    if len(port) > 0:
+    port = conf('port')
+    if port:
         port = ':%s' % port
+    else:
+        port = ''
 
     if not feed_host:
         feed_host = yagi.utils.get_ip_addr()
