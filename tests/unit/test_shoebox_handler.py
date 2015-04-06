@@ -49,7 +49,9 @@ class TestShoeboxHandler(unittest.TestCase):
                     'shoebox.roll_manager:WritingJSONRollManager'}.items()
         with mock.patch.object(shoebox_handler.os.path, "isdir") as isdir:
             isdir.return_value = True
-            sh = shoebox_handler.ShoeboxHandler()
-            self.assertTrue(sh.roll_manager is not None)
-            self.assertEquals(sh.roll_manager.directory, 'foo')
-
+            with mock.patch("shoebox.roll_manager.WritingJSONRollManager"
+                            "._get_directory_size") as gds:
+                gds.return_value = 1
+                sh = shoebox_handler.ShoeboxHandler()
+                self.assertTrue(sh.roll_manager is not None)
+                self.assertEquals(sh.roll_manager.directory, 'foo')
