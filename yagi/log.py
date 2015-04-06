@@ -36,11 +36,12 @@ class YagiLogger(logging.Logger):
 
 def setup_logging():
     config_file = yagi.config.get('logging', 'config_file')
+    logfile = yagi.config.get('logging', 'logfile')
     default_log_level = logging.getLevelName(yagi.config.get('logging', 'default_level'))
 
     # This is a hack, but it's needed to pass the logfile name & default
     # loglevel into log handlers configured with a config file. (mdragon)
-    logging.LOCAL_LOG_FILE = config_file
+    logging.LOCAL_LOG_FILE = logfile
     logging.LOCAL_DEFAULT_LEVEL = default_log_level
 
     if config_file:
