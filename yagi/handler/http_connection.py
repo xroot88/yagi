@@ -64,6 +64,7 @@ class HttpConnection():
             if resp.status == 201:
                 parsed_content = BeautifulSoup.BeautifulSoup(content)
                 id_tag = "?"
+                ah_event_id = "?"
                 atom_id_tag = parsed_content.find('atom:id')
                 if atom_id_tag:
                     ah_event_id = atom_id_tag.string.replace('urn:uuid:', '')

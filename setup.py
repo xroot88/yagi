@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name='yagi',
-    version='0.21',
+    version='0.22',
     author='Matthew Dietz, Monsyne Dragon',
     author_email='matthew.dietz@gmail.com, mdragon@rackspace.com',
     description=("A PubSubHubBub Publisher and ATOM feed generator that "
