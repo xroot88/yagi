@@ -1,4 +1,5 @@
 import mock
+import json
 import unittest
 
 from yagi import config
@@ -50,8 +51,32 @@ class TestShoeboxHandler(unittest.TestCase):
         with mock.patch.object(shoebox_handler.os.path, "isdir") as isdir:
             isdir.return_value = True
             with mock.patch("shoebox.roll_manager.WritingJSONRollManager"
-                            "._get_directory_size") as gds:
-                gds.return_value = 1
+                            "._archive_working_files") as awf:
                 sh = shoebox_handler.ShoeboxHandler()
                 self.assertTrue(sh.roll_manager is not None)
                 self.assertEquals(sh.roll_manager.directory, 'foo')
+
+    def test_wrapping_payload(self):
+        config.config = mock.MagicMock()
+        config.config.items.return_value = {
+                'wrap_payload_with_region': 'True',
+                'wrap_region': 'my_region',
+                'wrap_cell': 'my_cell'}.items()
+        with mock.patch.object(shoebox_handler.os.path, "isdir") as isdir:
+            isdir.return_value = True
+            with mock.patch("shoebox.roll_manager.WritingJSONRollManager"
+                            "._archive_working_files") as awf:
+                sh = shoebox_handler.ShoeboxHandler()
+                self.assertTrue(sh.wrap_payload_with_region)
+                self.assertEquals(sh.region, 'my_region')
+                self.assertEquals(sh.cell, 'my_cell')
+                fake_rm = mock.MagicMock()
+                sh.roll_manager = fake_rm
+                payload ={'payload': 'foo'}
+                message = mock.MagicMock(payload=payload)
+                sh.handle_messages([message], {})
+                wrapped = {"region": "my_region",
+                          "cell": "my_cell",
+                          "notification": payload}
+                jsoned = json.dumps(wrapped)
+                fake_rm.write.assert_called_with({}, jsoned)
