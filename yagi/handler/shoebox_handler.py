@@ -42,6 +42,12 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
         roll_manager_str = self.config.get('roll_manager',
                                     'shoebox.roll_manager:WritingRollManager')
 
+        self.wrap_payload_with_region = self.config.get(
+                            'wrap_payload_with_region', 'False') == 'True'
+
+        self.region = self.config.get('wrap_region', 'n/a')
+        self.cell = self.config.get('wrap_cell', 'n/a')
+
         # Hack(sandy): These sorts of parameters should be left to the
         # callback handlers. Just need it here to get over the hump.
         # Needs to be refactored.
@@ -57,6 +63,9 @@ class ShoeboxHandler(yagi.handler.BaseHandler):
         # sure if we want that for raw archiving.
         for payload in self.iterate_payloads(messages, env):
             metadata = {}
+            if self.wrap_payload_with_region:
+                payload = {'region': self.region, 'cell': self.cell,
+                           'notification': payload}
             json_event = json.dumps(payload,
                                     cls=notification_utils.DateTimeEncoder)
             LOG.debug("shoebox writing payload: %s" % str(payload))
