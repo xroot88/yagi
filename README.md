@@ -32,6 +32,10 @@ of notification events that have been persisted in a datastore.
                  of the success or failure of the updates, letting you 
                  catch if the feed server is down, or some system is 
                  dropping events.
+* Elasticsearch: Persists distilled compute.instance.exists, .verified, and
+                 .failed events to Elasticsearch. Additionally if the CufPub
+                 handler is present earlier in the chain pushes synthetic
+                 .cuf events as well in response to successful CufPub events.
 
 ## Installation and running
 
