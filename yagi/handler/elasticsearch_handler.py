@@ -54,10 +54,12 @@ class ElasticsearchHandler(yagi.handler.BaseHandler):
         self.distiller = stackdistiller.distiller.Distiller(dist_conf)
 
     def _send_to_elasticsearch(self, event):
-        if 'compute.instance.exists' == event['event_type']:
+        if 'audit_period_ending' in event:
             event['@timestamp'] = event['audit_period_ending']
-        else:
+        elif 'when' in event:
             event['@timestamp'] = event['when']
+        else:
+            event['@timestamp'] = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
         event['region'] = self.region
 
@@ -70,7 +72,7 @@ class ElasticsearchHandler(yagi.handler.BaseHandler):
 
     def handle_messages(self, messages, env):
         cuf_pub_results = env.setdefault('cufpub.results', dict())
-        verified_msg_ids = []
+        verified_msg_ids = {}
         for payload in self.iterate_payloads(messages, env):
             try:
                 if 'instance.exists' in payload['event_type']:
@@ -80,21 +82,21 @@ class ElasticsearchHandler(yagi.handler.BaseHandler):
                     self._send_to_elasticsearch(event.get_event())
                     if ('compute.instance.exists.verified' ==
                             payload['event_type']):
-                        verified_msg_ids.append(payload['message_id'])
+                        verified_msg_ids[payload['message_id']] = payload
             except KeyError:
                 error_msg = 'Malformed Notification: %s' % payload
                 LOG.exception(error_msg)
                 continue
 
         # Look for successful cuf_pub results and push fake 'events' to ES
-        for msgid in verified_msg_ids:
+        for msgid, msg in verified_msg_ids.items():
             result = cuf_pub_results.get(msgid)
             if result is not None:
                 if not result['error'] and ('Success' == result['message']):
                     LOG.debug('Synthesizing .cuf event for ah event: %s' %
                               result['ah_event_id'])
-                    event = copy.copy(result)
-                    event['when'] = datetime.utcnow().replace(tzinfo=pytz.UTC)
+                    event = result.copy()
+                    event.update(msg)
                     event['original_message_id'] = msgid
                     event['event_type'] = \
                         'compute.instance.exists.verified.cuf'
