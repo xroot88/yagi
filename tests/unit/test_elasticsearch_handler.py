@@ -144,7 +144,7 @@ class TestElasticsearchHandler(unittest.TestCase):
 
         expected = copy.copy(event)
         expected['region'] = self.region
-        expected['@timestamp'] = now
+        expected['@timestamp'] = end
         exp_json = json.dumps(
             expected, cls=elasticsearch_handler.ElasticsearchDateEncoder)
         expected = json.loads(exp_json)
