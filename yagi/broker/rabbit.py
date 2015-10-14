@@ -22,6 +22,8 @@ with conf.defaults_for("rabbit_broker") as default:
     default("reconnect_delay", 5)
     default("max_wait", 600)
     default("max_connection_age", 14400)
+    default("ssl", False)
+
 
 LOG = logging.getLogger(__name__)
 
@@ -106,7 +108,8 @@ class Broker(object):
                         port=config("port"),
                         userid=config("user"),
                         password=config("password"),
-                        virtual_host=config("vhost"))
+                        virtual_host=config("vhost"),
+                        ssl=confbool("ssl"))
 
         auto_delete = consumer.config("auto_delete") == "True" or False
         durable = consumer.config("durable") == "True" or False

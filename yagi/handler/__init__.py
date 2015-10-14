@@ -93,3 +93,12 @@ class BaseHandler(object):
 
     def handle_messages(self, messages, env):
         raise NotImplementedError()
+
+
+class NullHandler(BaseHandler):
+    CONFIG_SECTION = "null"
+    AUTO_ACK = True
+
+    def handle_messages(self, messages, env):
+        for payload in self.iterate_payloads(messages, env):
+            LOG.debug("Event %s" % payload.get('event_type', '**none**'))
