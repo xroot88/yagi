@@ -30,46 +30,21 @@ class CufPub(yagi.handler.BaseHandler):
     def unescape_strings(self, payload_body):
         return str.replace(str.replace(payload_body, "&lt;", "<"), "&gt;", ">")
 
-    def _generate_new_id(self, original_message_id, event_type):
-        # Generate message_id for new events deterministically from
-        # the original message_id and event type using uuid5 algo.
-        # This will allow any dups to be caught by message_id. (mdragon)
-        if original_message_id:
-            oid = uuid.UUID(original_message_id)
-            return uuid.uuid5(oid, event_type)
-        else:
-            LOG.error("Generating %s, but origional message missing"
-                      " origional_message_id." % event_type)
-            return uuid.uuid4()
-
     def nova_cuf(self, deployment_info, payload):
-        notification = Notification(payload)
-        cuf = notification.convert_to_verified_message_in_cuf_format(
-            {'region': deployment_info['REGION'],
-             'data_center': deployment_info['DATACENTER']})
-        event_type = 'compute.instance.exists.verified.cuf'
-        original_message_id = notification.get_original_message_id()
-        entity = dict(content=cuf,
-                      id=str(self._generate_new_id(original_message_id,
-                             event_type)),
-                      event_type=event_type,
-                      original_message_id=original_message_id)
+        args = dict(region=deployment_info['REGION'],
+                    data_center=deployment_info['DATACENTER'],
+                    event_type='compute.instance.exists.verified.cuf')
+        notification = Notification(payload, **args)
+        entity = notification.to_entity()
         payload_body = yagi.serializer.cuf.dump_item(entity)
         return self.unescape_strings(payload_body)
 
-
     def glance_cuf(self, deployment_info, payload):
-        glance_notification = GlanceNotification(payload)
-        cuf = glance_notification.convert_to_verified_message_in_cuf_format(
-            {'region': deployment_info['DATACENTER'],
-             'data_center': deployment_info['REGION']})
-        event_type = 'image.exists.verified.cuf'
-        original_message_id = glance_notification.get_original_message_id()
-        entity = dict(content=cuf,
-                      id=str(self._generate_new_id(original_message_id,
-                             event_type)),
-                      event_type=event_type,
-                      original_message_id=original_message_id)
+        args = dict(region=deployment_info['REGION'],
+                    data_center=deployment_info['DATACENTER'],
+                    event_type='image.exists.verified.cuf')
+        glance_notification = GlanceNotification(payload, **args)
+        entity = glance_notification.to_entity()
         payload_body = yagi.serializer.cuf.dump_item(entity, service_title="Glance")
         return self.unescape_strings(payload_body)
 

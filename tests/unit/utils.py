@@ -32,7 +32,8 @@ test_glance_xml_generator_values = {
 
 
 def verified_nova_message_in_cuf_format(values):
-    test_nova_xml_generator_values.update(values)
+    vals = dict(**test_nova_xml_generator_values)
+    vals.update(values)
     cuf_xml = ("""<event xmlns="http://docs.rackspace.com/core/event" """
     """xmlns:nova="http://docs.rackspace.com/event/nova" """
     """version="1" id="%(id)s" resourceId="%(resource_id)s" resourceName="%(resource_name)s" dataCenter="%(data_center)s" region="%(region)s" tenantId="%(tenant_id)s" """
@@ -41,7 +42,7 @@ def verified_nova_message_in_cuf_format(values):
     """resourceType="%(resource_type)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" status="%(status)s" """
     """%(options_string)s """
     """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"/>"""
-    """</event>""") % test_nova_xml_generator_values
+    """</event>""") % vals
     return {'payload': cuf_xml}
 
 
