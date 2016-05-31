@@ -20,6 +20,7 @@ class TestGlanceNotification(TestCase):
 
     def test_convert_to_cuf_format(self):
         self.maxDiff = None
+        event_type = 'image.exists.verified.cuf'
         exists_message = {
             "event_type": "image.exists",
             "timestamp": "2013-09-02 16:09:16.247932",
@@ -88,10 +89,12 @@ class TestGlanceNotification(TestCase):
         """version="1"> <glance:product storage="67890" serverId="inst_uuid2" """
         """serviceCode="Glance" serverName="" resourceType="snapshot" """
         """version="1"/></event></events>""")}
-        notification = GlanceNotification(exists_message)
+        notification = GlanceNotification(exists_message,
+                                          event_type=event_type,
+                                          region='DFW',
+                                          data_center='DFW1')
         verified_message = notification.\
-            convert_to_verified_message_in_cuf_format(
-            {'region': 'DFW', 'data_center': 'DFW1'})
+            convert_to_verified_message_in_cuf_format()
 
         self.assertEquals(verified_message, expected_cuf_xml)
         self.mox.VerifyAll()
@@ -116,6 +119,9 @@ class TestGlanceNotification(TestCase):
 class TestNovaNotification(TestCase):
 
     def setUp(self):
+        self.event_type = 'compute.instance.exists.verified.cuf'
+        self.region = "DFW"
+        self.data_center = "DFW1"
         self.mox = mox.Mox()
         self.mox.StubOutWithMock(yagi.config, 'get')
         yagi.config.get('nova', 'nova_flavor_field_name').AndReturn(
@@ -124,6 +130,51 @@ class TestNovaNotification(TestCase):
 
     def tearDown(self):
         self.mox.UnsetStubs()
+
+    def test_convert_to_cuf_deterministic_id(self):
+        det_id = '00efc101-1a92-528e-bd71-7fa023d4e952'
+        exists_message = {
+            'event_type': 'test',
+            'message_id': 'some_uuid',
+            'original_message_id': '7f2f0e12-fa8a-49ac-985e-d74d06a38750',
+            '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
+            'payload': {
+                'tenant_id': '2882',
+                'access_ip_v4': '5.79.20.138',
+                'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
+                'audit_period_beginning': '2012-09-15 11:51:11',
+                'audit_period_ending': '2012-09-16 11:51:11',
+                'display_name': 'test',
+                'bandwidth': {
+                    'private': {'bw_in': 0, 'bw_out': 264902},
+                    'public': {'bw_in': 1001,'bw_out': 19992}
+                },
+                'image_meta': {'com.rackspace__1__options': '1'},
+                'instance_id': '56',
+                'dummy_flavor_field_name': '10',
+                'launched_at': '2012-09-14 11:51:11',
+                'deleted_at': '',
+                'instance_type': 'm1.nano',
+                'state': 'active',
+                'state_description': ''
+            }
+        }
+        self.mox.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
+        self.mox.ReplayAll()
+        changed_values = dict(id=det_id)
+        expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
+            changed_values)
+
+        notification = Notification(exists_message,
+                                    event_type=self.event_type,
+                                    region=self.region,
+                                    data_center=self.data_center)
+        verified_message = notification.\
+            convert_to_verified_message_in_cuf_format()
+
+        self.assertEquals(expected_cuf_xml['payload'],
+                          verified_message['payload'])
 
     def test_convert_to_cuf_format_when_launched_at_before_audit_period(self):
         exists_message = {
@@ -159,10 +210,12 @@ class TestNovaNotification(TestCase):
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
 
-        notification = Notification(exists_message)
+        notification = Notification(exists_message,
+                                    event_type=self.event_type,
+                                    region=self.region,
+                                    data_center=self.data_center)
         verified_message = notification.\
-            convert_to_verified_message_in_cuf_format(
-            {'region':'DFW','data_center': 'DFW1'})
+            convert_to_verified_message_in_cuf_format()
 
         self.assertEquals(expected_cuf_xml['payload'],
                           verified_message['payload'])
@@ -201,10 +254,12 @@ class TestNovaNotification(TestCase):
         values.update({'end_time': '2012-09-16T10:51:11Z'})
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
-        notification = Notification(exists_message)
-        verified_message = \
-            notification.convert_to_verified_message_in_cuf_format(
-                {'region':'DFW','data_center':'DFW1'})
+        notification = Notification(exists_message,
+                                    event_type=self.event_type,
+                                    region=self.region,
+                                    data_center=self.data_center)
+        verified_message = notification.\
+            convert_to_verified_message_in_cuf_format()
 
         self.assertEquals(expected_cuf_xml['payload'],
                           verified_message['payload'])
@@ -243,11 +298,13 @@ class TestNovaNotification(TestCase):
         uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
         expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
             values)
-        notification = Notification(exists_message)
+        notification = Notification(exists_message,
+                                    event_type=self.event_type,
+                                    region=self.region,
+                                    data_center=self.data_center)
         self.mox.ReplayAll()
         verified_message = notification.\
-            convert_to_verified_message_in_cuf_format(
-            {'region': 'DFW', 'data_center': 'DFW1'})
+            convert_to_verified_message_in_cuf_format()
 
         self.assertEquals(expected_cuf_xml['payload'],
                           verified_message['payload'])
