@@ -30,6 +30,19 @@ test_glance_xml_generator_values = {
     'server_name': 'X'
 }
 
+test_neutron_pub_ipv4_xml_generator_values = {
+    'id': 'e1905c4e-4c6c-555a-af3a-92f8a03d2a99',
+    'endTime': '2016-06-13T23:59:59Z',
+    'resourceName': '10.69.221.27',
+    'resourceId': '77777777-7777-7777-7777-777777777777',
+    'startTime': '2016-06-13T00:00:00Z',
+    'tenant_id': '404',
+    'ipType': 'fixed',
+    'resourceType': 'IP',
+    'dataCenter': 'DFW1',
+    'region': 'DFW',
+    'tenantId': '404'
+}
 
 def verified_nova_message_in_cuf_format(values):
     vals = dict(**test_nova_xml_generator_values)
@@ -62,3 +75,25 @@ def verified_glance_message_in_cuf_format(values):
     return {'payload': cuf_xml}
 
 
+def verified_neutron_pub_ipv4_message_in_cuf_format(values):
+    vals = dict(**test_neutron_pub_ipv4_xml_generator_values)
+    vals.update(values)
+    cuf_xml = (
+        """<event xmlns="http://docs.rackspace.com/core/event" """
+        """xmlns:neutron="http://docs.rackspace.com/usage/neutron/public-ip-usage" """
+        """id="{id}" """
+        """version="1" """
+        """resourceId="{resourceId}" """
+        """resourceName="{resourceName}" """
+        """tenantId="{tenantId}" """
+        """startTime="{startTime}" """
+        """endTime="{endTime}" """
+        """type="USAGE" """
+        """dataCenter="{dataCenter}" """
+        """region="{region}"> """
+        """<neutron:product serviceCode="CloudNetworks" """
+        """resourceType="{resourceType}" """
+        """ipType="{ipType}"/> """
+        """</event>"""
+    )
+    return {'payload': cuf_xml.format(**test_neutron_pub_ipv4_xml_generator_values)}
