@@ -1,6 +1,5 @@
 import datetime
 import logging
-import uuid
 import yagi
 
 LOG = logging.getLogger(__name__)
@@ -152,7 +151,6 @@ class GlanceNotificationPayload(object):
         audit_period_ending = payload_json.get('audit_period_ending', "")
         for raw_image in raw_images:
             image = {}
-            image['id'] = uuid.uuid4()
             image['resource_id'] = raw_image.get('id', "")
             image['tenant_id'] = payload_json.get('owner', "")
             created_at = raw_image['created_at']

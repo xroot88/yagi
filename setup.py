@@ -38,6 +38,7 @@ setup(
         "requests",
         "routes",
         "WebOb",
+        "stackdistiller",
         "python-daemon",
         "BeautifulSoup",
     ],
