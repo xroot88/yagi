@@ -61,7 +61,7 @@ class BaseNotification(object):
     def get_original_message_id(self):
         return self.message.get('original_message_id', "")
 
-    def generate_new_id(self):
+    def generate_new_id(self, extra=None):
         # Generate message_id for new events deterministically from
         # the original message_id and event type using uuid5 algo.
         # This will allow any dups to be caught by message_id. (mdragon)
@@ -69,7 +69,10 @@ class BaseNotification(object):
 
         if original_message_id:
             oid = uuid.UUID(original_message_id)
-            return uuid.uuid5(oid, self.event_type)
+            if extra:
+                return uuid.uuid5(oid, self.event_type + str(extra))
+            else:
+                return uuid.uuid5(oid, self.event_type)
         else:
             LOG.error("Generating %s, but origional message missing"
                       " origional_message_id." % self.event_type)
@@ -122,6 +125,7 @@ class GlanceNotification(BaseNotification):
         images = payload.images
         cuf = "<events>"
         for image in images:
+            image['id'] = self.generate_new_id(extra=image['resource_id'])
             image['data_center'] = self.data_center
             image['region'] = self.region
             cuf_xml = glance_cuf_template_per_image % image
