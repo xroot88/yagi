@@ -3,7 +3,9 @@ import uuid
 import datetime
 import logging
 from yagi.handler.notification_options import NotificationOptions
-from yagi.handler.notification_payload import NotificationPayload, GlanceNotificationPayload
+from yagi.handler.notification_payload import NotificationPayload,\
+        GlanceNotificationPayload,\
+        NeutronPubIPv4UsageNotificationPayload
 
 nova_cuf_template = ("""<event xmlns="http://docs.rackspace.com/core/event" """
 """xmlns:nova="http://docs.rackspace.com/event/nova" version="1" """
@@ -23,6 +25,25 @@ glance_cuf_template_per_image = ("""<event endTime="%(end_time)s" """
 """<glance:product storage="%(storage)s" serverId="%(server_id)s" """
 """serviceCode="Glance" serverName="%(server_name)s" """
 """resourceType="%(resource_type)s" version="1"/></event>""")
+
+neutron_pub_ipv4_v1_cuf_template = (
+"""<event xmlns="http://docs.rackspace.com/core/event" """
+"""xmlns:neutron="http://docs.rackspace.com/usage/neutron/public-ip-usage" """
+"""id="{id}" """
+"""version="1" """
+"""resourceId="{resourceId}" """
+"""resourceName="{resourceName}" """
+"""tenantId="{tenantId}" """
+"""startTime="{startTime}" """
+"""endTime="{endTime}" """
+"""type="USAGE" """
+"""dataCenter="{dataCenter}" """
+"""region="{region}"> """
+"""<neutron:product serviceCode="CloudNetworks" """
+"""resourceType="{resourceType}" """
+"""ipType="{ipType}"/> """
+"""</event>"""
+)
 
 atom_hopper_time_format = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -45,6 +66,7 @@ class BaseNotification(object):
         # the original message_id and event type using uuid5 algo.
         # This will allow any dups to be caught by message_id. (mdragon)
         original_message_id = self.get_original_message_id()
+
         if original_message_id:
             oid = uuid.UUID(original_message_id)
             if extra:
@@ -110,3 +132,33 @@ class GlanceNotification(BaseNotification):
             cuf += cuf_xml
         cuf += "</events>"
         return cuf
+
+
+class NeutronPubIPv4UsageNotification(BaseNotification):
+    """Neutron Base Notification
+
+    This will build the base for Neutron additional IP notifications and
+    Floating IP bandwidth notifications.
+    """
+
+    def get_original_message_id(self):
+        return self.message.get('_unique_id', "")
+
+
+    def _create_cuf_xml(self, json_body):
+        payload = NeutronPubIPv4UsageNotificationPayload(json_body['payload'])
+        cuf_xml_values = {
+            'id': str(self.generate_new_id()),
+            'resourceId': payload.resourceId,
+            'resourceName': payload.resourceName,
+            'tenantId': payload.tenantId,
+            'startTime': payload.startTime,
+            'endTime': payload.endTime,
+            'resourceType': payload.resourceType,
+            'ipType': payload.ipType,
+            'dataCenter': self.data_center,
+            'region': self.region
+        }
+
+        cuf_xml = neutron_pub_ipv4_v1_cuf_template.format(**cuf_xml_values)
+        return cuf_xml

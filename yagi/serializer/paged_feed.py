@@ -90,7 +90,7 @@ class PagedFeed(feedgenerator.Atom1Feed):
 class CufPagedFeed(feedgenerator.Atom1Feed):
 
     def root_attributes_for_cuf(self, title):
-        if title == "Server":
+        if title == "Server" or title == "NeutronPubIPv4":
             if self.feed['language'] is not None:
                 return {u"xmlns:atom": self.ns, u"xml:lang": self.feed['language']}
             else:

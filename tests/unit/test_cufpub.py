@@ -329,3 +329,53 @@ class CufPubTests(unittest.TestCase):
         self.handler.handle_messages(messages, dict())
 
         self.assertFalse(mock_request.called)
+
+
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(201),
+        """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:id>"""
+        """urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""))
+    def test_notify_for_pub_ipv4_exists_message(self, mock_request):
+        """This essentially checks that 'ip.exists' is a valid event_type"""
+        original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
+        messages = [MockMessage(
+            {
+                "_unique_id": original_message_id,
+                "event_type": "ip.exists",
+                "timestamp": "2016-06-13T23:59:59Z",
+                "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
+                "priority": "INFO",
+                "publisher_id": "ubuntu",
+                "payload": {
+                    "endTime": "2016-06-13T23:59:59Z",
+                    "startTime": "2016-06-13T00:00:00Z",
+                    "id": "ffc6f692-b31b-4ea8-8056-fbbaefa86e34",
+                    "ip_address": "10.69.221.27",
+                    "ip_type": "fixed",
+                    "tenant_id": "404"
+                }
+            }
+        )]
+
+        cuf_xml_body = (
+            """<?xml version="1.0" encoding="utf-8"?>\n"""
+            """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:category """
+            """term="neutron.ip.exists.verified.cuf"></atom:category><atom:category """
+            """term="original_message_id:425b23c9-9add-409f-938e-c131f304602a"></atom:category><atom:title """
+            """type="text">NeutronPubIPv4</atom:title><atom:content """
+            """type="application/xml"><event """
+            """xmlns="http://docs.rackspace.com/core/event" """
+            """xmlns:neutron="http://docs.rackspace.com/usage/neutron/public-ip-usage" """
+            """id="3ac28cdc-54ed-55ac-9f51-e00d166d4044" version="1" """
+            """resourceId="ffc6f692-b31b-4ea8-8056-fbbaefa86e34" """
+            """resourceName="10.69.221.27" tenantId="404" """
+            """startTime="2016-06-13T00:00:00Z" endTime="2016-06-13T23:59:59Z" """
+            """type="USAGE" dataCenter="ORD1" region="PREPROD-ORD"> <neutron:product """
+            """serviceCode="CloudNetworks" resourceType="IP" ipType="fixed"/> """
+            """</event></atom:content></atom:entry>"""
+        )
+
+        self.handler.handle_messages(messages, dict())
+        self.assertTrue(mock_request.called)
+        mock_request.assert_called_with('http://127.0.0.1:9000/test/test_feed',
+                                        'POST', body=cuf_xml_body,
+                                         headers={'Content-Type': 'application/atom+xml'})

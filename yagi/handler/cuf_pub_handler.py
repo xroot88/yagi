@@ -8,7 +8,7 @@ from yagi.config import config
 from yagi.handler.http_connection import HttpConnection, InvalidContentException
 from yagi.handler.http_connection import MessageDeliveryFailed
 from yagi.handler.http_connection import UnauthorizedException
-from yagi.handler.notification import Notification, GlanceNotification
+from yagi.handler.notification import Notification, GlanceNotification, NeutronPubIPv4UsageNotification
 import yagi.serializer.cuf
 
 with yagi.config.defaults_for("cufpub") as default:
@@ -48,6 +48,17 @@ class CufPub(yagi.handler.BaseHandler):
         payload_body = yagi.serializer.cuf.dump_item(entity, service_title="Glance")
         return self.unescape_strings(payload_body)
 
+    def neutron_pub_ipv4_cuf(self, deployment_info, payload):
+        args = dict(region=deployment_info['REGION'],
+                    data_center=deployment_info['DATACENTER'],
+                    event_type='neutron.ip.exists.verified.cuf')
+        neutron_notification = NeutronPubIPv4UsageNotification(payload, **args)
+        entity = neutron_notification.to_entity()
+        payload_body = yagi.serializer.cuf.dump_item(entity,
+                                                     service_title="NeutronPubIPv4"
+                                                    )
+        return self.unescape_strings(payload_body)
+
     def get_deployment_info(self, deployment_info_string):
         data_center = deployment_info_string.split(',')[0].split('=')[1]
         region = deployment_info_string.split(',')[1].split('=')[1]
@@ -76,6 +87,9 @@ class CufPub(yagi.handler.BaseHandler):
                 elif "image.exists" in payload['event_type']:
                     service = 'glance'
                     payload_body = self.glance_cuf(deployment_info, payload)
+                elif "ip.exists" in payload['event_type']:
+                    service = 'neutron'
+                    payload_body = self.neutron_pub_ipv4_cuf(deployment_info, payload)
             except KeyError, e:
                 error_msg = "Malformed Notification: %s" % payload
                 LOG.error(error_msg)
