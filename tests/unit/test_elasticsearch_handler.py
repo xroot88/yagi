@@ -13,6 +13,35 @@ import yagi.config
 from yagi.handler import elasticsearch_handler
 
 
+TEST_DISTILLER_CONF = [
+{'event_type': 'compute.*',
+  'traits': {'deleted_at': {'fields': 'payload.deleted_at',
+    'type': 'datetime'},
+   'host': {'fields': 'publisher_id',
+    'plugin': {'name': 'split', 'parameters': {'max_split': 1, 'segment': 1}}},
+   'instance_id': {'fields': 'payload.instance_id'},
+   'launched_at': {'fields': 'payload.launched_at', 'type': 'datetime'},
+   'service': {'fields': 'publisher_id', 'plugin': 'split'},
+   'state': {'fields': 'payload.state'},
+   'tenant_id': {'fields': 'payload.tenant_id'},
+   'user_id': {'fields': 'payload.user_id'}}},
+ {'event_type': 'compute.instance.exists',
+  'traits': {'audit_period_beginning': {'fields': 'payload.audit_period_beginning',
+    'type': 'datetime'},
+   'audit_period_ending': {'fields': 'payload.audit_period_ending',
+    'type': 'datetime'},
+   'deleted_at': {'fields': 'payload.deleted_at', 'type': 'datetime'},
+   'host': {'fields': 'publisher_id',
+    'plugin': {'name': 'split', 'parameters': {'max_split': 1, 'segment': 1}}},
+   'instance_id': {'fields': 'payload.instance_id'},
+   'launched_at': {'fields': 'payload.launched_at', 'type': 'datetime'},
+   'service': {'fields': 'publisher_id', 'plugin': 'split'},
+   'state': {'fields': 'payload.state'},
+   'tenant_id': {'fields': 'payload.tenant_id'},
+   'user_id': {'fields': 'payload.user_id'}}}
+]
+
+
 class MockMessage(object):
     def __init__(self, payload):
         self.payload = payload
@@ -68,9 +97,13 @@ class TestElasticsearchHandler(unittest.TestCase):
         def config_with(*args):
             return functools.partial(get, args)
 
+        def load_distiller_conf(filename):
+            return TEST_DISTILLER_CONF
+
         self.patches.append(mock.patch.object(yagi.config, 'config_with',
                                               new=config_with))
         self.patches.append(mock.patch.object(yagi.config, 'get', new=get))
+        self.patches.append(mock.patch.object(stackdistiller.distiller, 'load_config', new=load_distiller_conf))
 
         self.post_args = []
 

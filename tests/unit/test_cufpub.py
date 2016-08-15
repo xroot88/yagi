@@ -2,7 +2,7 @@ import functools
 import unittest
 import uuid
 import httplib2
-import mox
+import mock
 import stubout
 from yagi.handler import http_connection
 import yagi
@@ -28,10 +28,9 @@ class CufPubTests(unittest.TestCase):
 
     def setUp(self):
         self.stubs = stubout.StubOutForTesting()
-        self.mox = mox.Mox()
         config_dict = {
             'atompub': {
-                'url': 'http://127.0.0.1:9000/test/%(event_type)s',
+                'url': 'http://127.0.0.1:9000/test/test_feed',
                 'user': 'user',
                 'key': 'key',
                 'interval': 30,
@@ -52,7 +51,7 @@ class CufPubTests(unittest.TestCase):
                 'method': 'no_auth'
             },
             'cufpub': {
-                'url': 'http://127.0.0.1:9000/test/%(event_type)s',
+                'url': 'http://127.0.0.1:9000/test/test_feed',
                 'user': 'user',
                 'key': 'key',
                 'interval': 30,
@@ -88,9 +87,11 @@ class CufPubTests(unittest.TestCase):
 
     def tearDown(self):
         self.stubs.UnsetAll()
-        self.mox.UnsetStubs()
 
-    def test_notify_for_instance_exists_message(self):
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(201),
+        """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:id>"""
+        """urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""))
+    def test_notify_for_instance_exists_message(self, mock_request):
         original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {
@@ -119,7 +120,7 @@ class CufPubTests(unittest.TestCase):
             }
         )]
 
-        body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
+        cuf_xml_body = ("""<?xml version="1.0" encoding="utf-8"?>\n"""
         """<atom:entry xmlns:atom="http://www.w3.org"""
         """/2005/Atom"><atom:category term="compute.instance."""
         """exists.verified.cuf"></atom:category><atom:category term"""
@@ -136,21 +137,18 @@ class CufPubTests(unittest.TestCase):
         """="SERVER" flavorId="10" flavorName="m1.nano" status="ACTIVE" """
         """osLicenseType="RHEL" bandwidthIn="1001" bandwidthOut"""
         """="19992"/></event></atom:content></atom:entry>""")
-        self.mox.StubOutWithMock(httplib2.Http, """request""")
-        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
-        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
-        httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
-                              'POST', body=body,
-                              headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), content))
-
-        self.mox.ReplayAll()
 
         self.handler.handle_messages(messages, dict())
 
-        self.mox.VerifyAll()
+        self.assertTrue(mock_request.called)
+        mock_request.assert_called_with('http://127.0.0.1:9000/test/test_feed',
+                                        'POST', body=cuf_xml_body,
+                                         headers={'Content-Type': 'application/atom+xml'})
 
-    def test_notify_for_image_exists_message_for_one_image(self):
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(201),
+        """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:id>"""
+        """urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""))
+    def test_notify_for_image_exists_message_for_one_image(self, mock_request):
         original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {"event_type": "image.exists",
@@ -187,28 +185,25 @@ class CufPubTests(unittest.TestCase):
         """<atom:title type="text">Glance"""
         """</atom:title><atom:content type="application/xml"><events><"""
         """event endTime="2013-09-02T23:59:59Z" """
-        """startTime="2013-09-02T16:08:10Z" region="ORD1" """
-        """dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image1" """
+        """startTime="2013-09-02T16:08:10Z" region="PREPROD-ORD" """
+        """dataCenter="ORD1" type="USAGE" """
+        """id="3ec2aa55-1f5c-59b9-b7c9-f05a8dc5b9e3" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product """
         """storage="12345" serverId="inst_uuid1" serviceCode="Glance" """
         """serverName="" resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
-        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
-        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
-        self.mox.StubOutWithMock(httplib2.Http, 'request')
-        httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
-                              'POST', body=cuf_xml_body,
-                              headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), content))
-        self.mox.ReplayAll()
-
         self.handler.handle_messages(messages, dict())
 
-        self.mox.VerifyAll()
+        self.assertTrue(mock_request.called)
+        mock_request.assert_called_with('http://127.0.0.1:9000/test/test_feed',
+                                        'POST', body=cuf_xml_body,
+                                         headers={'Content-Type': 'application/atom+xml'})
 
-    def test_notify_for_image_exists_message_for_more_than_one_image(self):
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(201),
+        """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:id>"""
+        """urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""))
+    def test_notify_for_image_exists_message_for_more_than_one_image(self, mock_request):
         original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
         messages = [MockMessage(
             {"event_type": "image.exists",
@@ -256,33 +251,28 @@ class CufPubTests(unittest.TestCase):
         """<atom:category term="original_message_id:425b23c9-9add-409f-938e-c131f304602a"></atom:category>"""
         """<atom:title type="text">Glance</atom:title><atom:content type="application/xml">"""
         """<events><event endTime="2013-09-02T23:59:59Z" startTime="2013-09-02T"""
-        """16:08:10Z" region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image1" """
+        """16:08:10Z" region="PREPROD-ORD" dataCenter="ORD1" type="USAGE" """
+        """id="3ec2aa55-1f5c-59b9-b7c9-f05a8dc5b9e3" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product storage="12345" """
         """serverId="inst_uuid1" serviceCode="Glance" serverName="" """
         """resourceType="snapshot" version="1"/></event><event """
         """endTime="2013-09-02T16:08:46Z" startTime="2013-09-02T16:05:17Z" """
-        """region="ORD1" dataCenter="PREPROD-ORD" type="USAGE" """
-        """id="03eb6990-616d-545f-a7c8-1cd8d03ac730" resourceId="image2" """
+        """region="PREPROD-ORD" dataCenter="ORD1" type="USAGE" """
+        """id="8809eae4-2e0e-52a6-b95a-a608ee3acb91" resourceId="image2" """
         """tenantId="owner1" version="1"> <glance:product storage="67890" """
         """serverId="inst_uuid2" serviceCode="Glance" serverName="" """
         """resourceType="snapshot" version="1"/></event></events>"""
         """</atom:content></atom:entry>""")
 
-        content = ("""<atom:entry xmlns:atom="http://www.w3.org/2005/Atom">"""
-        """<atom:id>urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id""")
-        self.mox.StubOutWithMock(httplib2.Http, 'request')
-        httplib2.Http.request('http://127.0.0.1:9000/test/%(event_type)s',
-                              'POST', body=cuf_xml_body,
-                              headers={'Content-Type': 'application/atom+xml'}
-        ).AndReturn((MockResponse(201), content))
-        self.mox.ReplayAll()
-
         self.handler.handle_messages(messages, dict())
 
-        self.mox.VerifyAll()
+        self.assertTrue(mock_request.called)
+        mock_request.assert_called_with('http://127.0.0.1:9000/test/test_feed',
+                                        'POST', body=cuf_xml_body,
+                                         headers={'Content-Type': 'application/atom+xml'})
 
-    def test_notify_fails(self):
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(404), """Bogus, dude!"""))
+    def test_notify_fails(self, mock_request):
         messages = [MockMessage(
             {
                 'event_type': 'compute.instance.exists',
@@ -308,17 +298,13 @@ class CufPubTests(unittest.TestCase):
                      'state_description': ''}
             }
         )]
-        self.called = False
 
-        def mock_request(*args, **kwargs):
-            self.called = True
-            return MockResponse(404), None
-
-        self.stubs.Set(httplib2.Http, 'request', mock_request)
         self.handler.handle_messages(messages, dict())
-        self.assertEqual(self.called, True)
 
-    def test_malformed_message_should_not_raise_exception(self):
+        self.assertTrue(mock_request.called)
+
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(404), """Bogus, dude!"""))
+    def test_malformed_message_should_not_raise_exception(self, mock_request):
         messages = [MockMessage(
             {
                 'event_type': 'compute.instance.exists',
@@ -340,13 +326,56 @@ class CufPubTests(unittest.TestCase):
                      'deleted_at': ''}
             }
         )]
-        self.called = False
-
-        def mock_request(*args, **kwargs):
-            self.called = True
-            return MockResponse(404), None
-
-        self.stubs.Set(httplib2.Http, 'request', mock_request)
         self.handler.handle_messages(messages, dict())
-        self.assertEqual(self.called, False)
 
+        self.assertFalse(mock_request.called)
+
+
+    @mock.patch('httplib2.Http.request', return_value=(MockResponse(201),
+        """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:id>"""
+        """urn:uuid:95347e4d-4737-4438-b774-6a9219d78d2a</atom:id>"""))
+    def test_notify_for_pub_ipv4_exists_message(self, mock_request):
+        """This essentially checks that 'ip.exists' is a valid event_type"""
+        original_message_id = '425b23c9-9add-409f-938e-c131f304602a'
+        messages = [MockMessage(
+            {
+                "_unique_id": original_message_id,
+                "event_type": "ip.exists",
+                "timestamp": "2016-06-13T23:59:59Z",
+                "message_id": "18b59543-2e99-4208-ba53-22726c02bd67",
+                "priority": "INFO",
+                "publisher_id": "ubuntu",
+                "payload": {
+                    "endTime": "2016-06-13T23:59:59Z",
+                    "startTime": "2016-06-13T00:00:00Z",
+                    "id": "ffc6f692-b31b-4ea8-8056-fbbaefa86e34",
+                    "ip_address": "10.69.221.27",
+                    "ip_type": "fixed",
+                    "tenant_id": "404"
+                }
+            }
+        )]
+
+        cuf_xml_body = (
+            """<?xml version="1.0" encoding="utf-8"?>\n"""
+            """<atom:entry xmlns:atom="http://www.w3.org/2005/Atom"><atom:category """
+            """term="neutron.ip.exists.verified.cuf"></atom:category><atom:category """
+            """term="original_message_id:425b23c9-9add-409f-938e-c131f304602a"></atom:category><atom:title """
+            """type="text">NeutronPubIPv4</atom:title><atom:content """
+            """type="application/xml"><event """
+            """xmlns="http://docs.rackspace.com/core/event" """
+            """xmlns:neutron="http://docs.rackspace.com/usage/neutron/public-ip-usage" """
+            """id="3ac28cdc-54ed-55ac-9f51-e00d166d4044" version="1" """
+            """resourceId="ffc6f692-b31b-4ea8-8056-fbbaefa86e34" """
+            """resourceName="10.69.221.27" tenantId="404" """
+            """startTime="2016-06-13T00:00:00Z" endTime="2016-06-13T23:59:59Z" """
+            """type="USAGE" dataCenter="ORD1" region="PREPROD-ORD"> <neutron:product """
+            """serviceCode="CloudNetworks" resourceType="IP" ipType="fixed"/> """
+            """</event></atom:content></atom:entry>"""
+        )
+
+        self.handler.handle_messages(messages, dict())
+        self.assertTrue(mock_request.called)
+        mock_request.assert_called_with('http://127.0.0.1:9000/test/test_feed',
+                                        'POST', body=cuf_xml_body,
+                                         headers={'Content-Type': 'application/atom+xml'})

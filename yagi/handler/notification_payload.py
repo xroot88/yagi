@@ -1,6 +1,5 @@
 import datetime
 import logging
-import uuid
 import yagi
 
 LOG = logging.getLogger(__name__)
@@ -19,6 +18,16 @@ def end_time(deleted_at, audit_period_ending):
 
 
 def format_time(time,return_in_datetime_format=False):
+        # If time is already in the correct form:
+        # e.g., '2016-06-10T13:34:07Z'
+        # verify format and return it.
+        if time.endswith('Z'):
+            try:
+                _ = datetime.datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                LOG.exception("BAD DATE: %s", time)
+            return time
+
         if 'T' in time:
             try:
                 # Old way of doing it
@@ -152,7 +161,6 @@ class GlanceNotificationPayload(object):
         audit_period_ending = payload_json.get('audit_period_ending', "")
         for raw_image in raw_images:
             image = {}
-            image['id'] = uuid.uuid4()
             image['resource_id'] = raw_image.get('id', "")
             image['tenant_id'] = payload_json.get('owner', "")
             created_at = raw_image['created_at']
@@ -169,3 +177,33 @@ class GlanceNotificationPayload(object):
             image['server_name'] = properties.get('instance_name', "")
             image['storage'] = raw_image.get('size', "")
             self.images.append(image)
+
+
+#
+# Neutron notifications:
+# Two types:
+#    - Additional public IPv4 usage NeutronPubIPv4UsageNotificationPayload
+#    - Floating IP bandwidth NeutronFLIPBandwidthNotificationPayload
+# Both notifications are very similar with Floating IP bandwidth
+# having an extra attribute "bandwidthOut".
+# This commit only the NeutronPubIPv4UsageNotificationPayload class added.
+#
+
+class NeutronNotificationBasePayload(object):
+    """Base class for IP address notifications and Floating IP bandwidth
+    notifications"""
+    def __init__(self, payload_json):
+        self.resourceId = payload_json.get('id', '')
+        self.resourceName = payload_json.get('ip_address', '')
+        self.tenantId = payload_json.get('tenant_id', '')
+        self.startTime = format_time(payload_json.get('startTime', ''))
+        self.endTime = format_time(payload_json.get('endTime', ''))
+        self.resourceType = 'IP'
+        self.ipType = payload_json.get('ip_type', '')
+
+
+class NeutronPubIPv4UsageNotificationPayload(NeutronNotificationBasePayload):
+    """Class that supports additional IP usage notifications"""
+    def __init__(self, payload_json):
+        super(NeutronPubIPv4UsageNotificationPayload,
+              self).__init__(payload_json)
