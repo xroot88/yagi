@@ -190,7 +190,7 @@ class CufPubTests(unittest.TestCase):
         """id="3ec2aa55-1f5c-59b9-b7c9-f05a8dc5b9e3" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product """
         """storage="12345" serverId="inst_uuid1" serviceCode="Glance" """
-        """serverName="" resourceType="snapshot" version="1"/></event>"""
+        """version="1"/></event>"""
         """</atom:content></atom:entry>""")
 
         self.handler.handle_messages(messages, dict())
@@ -254,14 +254,14 @@ class CufPubTests(unittest.TestCase):
         """16:08:10Z" region="PREPROD-ORD" dataCenter="ORD1" type="USAGE" """
         """id="3ec2aa55-1f5c-59b9-b7c9-f05a8dc5b9e3" resourceId="image1" """
         """tenantId="owner1" version="1"> <glance:product storage="12345" """
-        """serverId="inst_uuid1" serviceCode="Glance" serverName="" """
-        """resourceType="snapshot" version="1"/></event><event """
+        """serverId="inst_uuid1" serviceCode="Glance" """
+        """version="1"/></event><event """
         """endTime="2013-09-02T16:08:46Z" startTime="2013-09-02T16:05:17Z" """
         """region="PREPROD-ORD" dataCenter="ORD1" type="USAGE" """
         """id="8809eae4-2e0e-52a6-b95a-a608ee3acb91" resourceId="image2" """
         """tenantId="owner1" version="1"> <glance:product storage="67890" """
-        """serverId="inst_uuid2" serviceCode="Glance" serverName="" """
-        """resourceType="snapshot" version="1"/></event>"""
+        """serverId="inst_uuid2" serviceCode="Glance" """
+        """version="1"/></event>"""
         """</atom:content></atom:entry>""")
 
         self.handler.handle_messages(messages, dict())

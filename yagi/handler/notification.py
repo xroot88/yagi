@@ -23,8 +23,7 @@ glance_cuf_template_per_image = ("""<event endTime="%(end_time)s" """
 """dataCenter="%(data_center)s" type="USAGE" id="%(id)s" """
 """resourceId="%(resource_id)s" tenantId="%(tenant_id)s" version="1"> """
 """<glance:product storage="%(storage)s" serverId="%(server_id)s" """
-"""serviceCode="Glance" serverName="%(server_name)s" """
-"""resourceType="%(resource_type)s" version="1"/></event>""")
+"""serviceCode="Glance" version="1"/></event>""")
 
 neutron_pub_ipv4_v1_cuf_template = (
 """<event xmlns="http://docs.rackspace.com/core/event" """
