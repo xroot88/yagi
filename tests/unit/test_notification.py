@@ -81,12 +81,12 @@ class TestGlanceNotification(TestCase):
         expected_cuf_xml = {'payload': ("""<event endTime="2013-09-02T23:59:59Z" """
         """startTime="2013-09-02T00:00:00Z" region="DFW" dataCenter="DFW1" """
         """type="USAGE" id="uuid1" resourceId="image1" tenantId="owner1" """
-        """version="1"> <glance:product storage="12345" serverId="inst_uuid1" """
+        """version="1"> <glance:product storage="12345" """
         """serviceCode="Glance" version="1"/></event>"""
         """<event endTime="2013-09-02T23:59:59Z" """
         """startTime="2013-09-02T16:05:17Z" region="DFW" dataCenter="DFW1" """
         """type="USAGE" id="uuid2" resourceId="image2" tenantId="owner1" """
-        """version="1"> <glance:product storage="67890" serverId="inst_uuid2" """
+        """version="1"> <glance:product storage="67890" """
         """serviceCode="Glance" version="1"/></event>""")}
         notification = GlanceNotification(exists_message,
                                           event_type=event_type,
