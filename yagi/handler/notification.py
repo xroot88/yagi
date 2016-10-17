@@ -22,7 +22,7 @@ glance_cuf_template_per_image = ("""<event endTime="%(end_time)s" """
 """startTime="%(start_time)s" region="%(region)s" """
 """dataCenter="%(data_center)s" type="USAGE" id="%(id)s" """
 """resourceId="%(resource_id)s" tenantId="%(tenant_id)s" version="1"> """
-"""<glance:product storage="%(storage)s" serverId="%(server_id)s" """
+"""<glance:product storage="%(storage)s" """
 """serviceCode="Glance" version="1"/></event>""")
 
 neutron_pub_ipv4_v1_cuf_template = (
