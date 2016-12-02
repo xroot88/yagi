@@ -370,7 +370,7 @@ class CufPubTests(unittest.TestCase):
             """resourceName="10.69.221.27" tenantId="404" """
             """startTime="2016-06-13T00:00:00Z" endTime="2016-06-13T23:59:59Z" """
             """type="USAGE" dataCenter="ORD1" region="PREPROD-ORD"> <neutron:product """
-            """serviceCode="CloudNetworks" resourceType="IP" ipType="fixed"/> """
+            """serviceCode="CloudNetworks" resourceType="IP" version="1" ipType="fixed"/> """
             """</event></atom:content></atom:entry>"""
         )
 

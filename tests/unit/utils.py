@@ -93,6 +93,7 @@ def verified_neutron_pub_ipv4_message_in_cuf_format(values):
         """region="{region}"> """
         """<neutron:product serviceCode="CloudNetworks" """
         """resourceType="{resourceType}" """
+        """version="1" """
         """ipType="{ipType}"/> """
         """</event>"""
     )

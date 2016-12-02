@@ -1,8 +1,9 @@
 import functools
-import unittest
+import unittest2 as unittest
 import mox
 import stubout
 import yagi
+import yagi.handler
 from yagi.handler import cuf_pub_handler, atompub_handler
 from yagi.handler.cuf_pub_handler import CufPub
 
@@ -19,6 +20,20 @@ class MockMessage(object):
 
     def ack(self):
         self.acknowledged = True
+
+
+class TestHandler(yagi.handler.BaseHandler):
+     CONFIG_SECTION = "test"
+     AUTO_ACK = True
+
+     def __init__(self, app=None, queue_name=None):
+         self.app = app
+         self.queue_name = queue_name
+         self.seen_messages = []
+
+     def handle_messages(self, messages, env):
+         for payload in self.iterate_payloads(messages, env):
+             self.seen_messages.append(payload)
 
 
 class BaseHandlerTests(unittest.TestCase):
@@ -59,7 +74,10 @@ class BaseHandlerTests(unittest.TestCase):
         'filters' : {
             'cufpub': 'compute.instance.exists.verified, compute.instance.exists'
         },
-        'exclude_filters' : {}
+        'exclude_filters' : {},
+        'discard_filters' : {
+            'test': 'test.thing.to.discard'
+        }
     }
 
     def setUp(self):
@@ -88,6 +106,19 @@ class BaseHandlerTests(unittest.TestCase):
     def tearDown(self):
         self.mox.UnsetStubs()
         self.stubs.UnsetAll()
+
+    def test_iterate_payloads_discard(self):
+        mock_messages = [MockMessage(dict(event_type='test.thing.one')),
+                         MockMessage(dict(event_type='test.thing.two')),
+                         MockMessage(dict(event_type='test.thing.to.discard')),
+                         MockMessage(dict(event_type='test.thing.three'))]
+        test_handler = TestHandler()
+        test_handler(mock_messages, dict())
+        for msg in mock_messages:
+            self.assertTrue(msg.acknowledged)
+        self.assertEqual(len(test_handler.seen_messages), 3)
+        self.assertNotIn('test.thing.to.discard',
+                [p['event_type'] for p in test_handler.seen_messages])
 
     def test_filter_out_exists_messages_for_cuf_handler(self):
         mock_message1 = MockMessage(

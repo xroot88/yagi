@@ -29,8 +29,7 @@ class ElasticsearchDateEncoder(json.JSONEncoder):
 
         delta = dt - epoch
 
-        seconds = int(delta.total_seconds())
-        ms = (seconds * 1000) + (dt.microsecond / 1000)
+        ms = (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6) / 10**3
         return ms
 
     def default(self, o):

@@ -4,3 +4,4 @@ nose
 notification_utils
 shoebox
 stackdistiller
+unittest2

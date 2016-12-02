@@ -3,7 +3,7 @@ import datetime
 import functools
 import json
 import requests
-import unittest
+import unittest2 as unittest
 import uuid
 
 import mock
