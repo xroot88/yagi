@@ -72,7 +72,8 @@ class TestShoeboxHandler(unittest.TestCase):
                 self.assertEquals(sh.cell, 'my_cell')
                 fake_rm = mock.MagicMock()
                 sh.roll_manager = fake_rm
-                payload ={'payload': 'foo'}
+                payload = {'event_type': 'test.thing',
+                           'message_id': '1234-5678'}
                 message = mock.MagicMock(payload=payload)
                 sh.handle_messages([message], {})
                 wrapped = {"region": "my_region",

@@ -86,8 +86,18 @@ class BaseHandler(object):
         return payload
 
     def iterate_payloads(self, messages, env):
+        discard_event_type_list = []
+        try:
+            discard_event_type = yagi.config.get(
+                'discard_filters', self.CONFIG_SECTION)
+            if discard_event_type:
+                discard_event_type_list = [a.strip() for a in discard_event_type.
+                                          split(",")]
+        except (NoOptionError, NoSectionError):
+            pass
         for message in messages:
-            yield self.filter_payload(message.payload, env)
+            if message.payload['event_type'] not in discard_event_type_list:
+                yield self.filter_payload(message.payload, env)
             if self.AUTO_ACK and not message.acknowledged:
                 message.ack()
 
