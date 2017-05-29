@@ -88,6 +88,11 @@ class NotificationPayload(object):
         self.start_time = start_time(self.launched_at,
                                      self.audit_period_beginning)
         self.end_time = end_time(self.deleted_at, self.audit_period_ending)
+        # For Additional IP billing purpose getting the list of IP's
+        self.ip_addrs = payload_json.get('ip_address_count', {})
+        public_ip_counts = self.ip_addrs.get('public', {})
+        self.ipv4_addrs = public_ip_counts.get('v4_count', 0)
+        self.ipv6_addrs = public_ip_counts.get('v6_count', 0)
 
     def _get_status(self, task_state, vm_state):
         _STATE_MAP = {
