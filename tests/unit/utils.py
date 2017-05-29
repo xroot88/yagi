@@ -14,6 +14,8 @@ test_nova_xml_generator_values = {
     'flavor_id': 10,
     'flavor_name': "m1.nano",
     'status': "ACTIVE",
+    'ipv4_addrs_count': 3,
+    'ipv6_addrs_count': 4
 }
 
 test_glance_xml_generator_values = {
@@ -51,11 +53,11 @@ def verified_nova_message_in_cuf_format(values):
     """xmlns:nova="http://docs.rackspace.com/event/nova" """
     """version="1" id="%(id)s" resourceId="%(resource_id)s" resourceName="%(resource_name)s" dataCenter="%(data_center)s" region="%(region)s" tenantId="%(tenant_id)s" """
     """startTime="%(start_time)s" endTime="%(end_time)s" type="USAGE">"""
-    """<nova:product version="1" serviceCode="CloudServersOpenStack" """
+    """<nova:product version="2" serviceCode="CloudServersOpenStack" """
     """resourceType="%(resource_type)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" status="%(status)s" """
     """%(options_string)s """
-    """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"/>"""
-    """</event>""") % vals
+    """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"  additionalIpv4="%(ipv4_addrs_count)s" """
+    """additionalIpv6="%(ipv6_addrs_count)s"/></event>""") % vals
     return {'payload': cuf_xml}
 
 
