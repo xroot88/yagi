@@ -155,7 +155,11 @@ class TestNovaNotification(TestCase):
                 'deleted_at': '',
                 'instance_type': 'm1.nano',
                 'state': 'active',
-                'state_description': ''
+                'state_description': '',
+                'ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 4, 'v6_count': 4}
+                }
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -198,7 +202,11 @@ class TestNovaNotification(TestCase):
                 'deleted_at': '',
                 'instance_type': 'm1.nano',
                 'state': 'active',
-                'state_description': ''
+                'state_description': '',
+                'ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 4, 'v6_count': 4}
+                }
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -243,7 +251,11 @@ class TestNovaNotification(TestCase):
                 'deleted_at': '',
                 'instance_type': 'm1.nano',
                 'state': 'active',
-                'state_description': ''
+                'state_description': '',
+                'ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 4, 'v6_count': 4}
+                }
             }
         }
         self.mox.StubOutWithMock(uuid, 'uuid4')
@@ -288,7 +300,11 @@ class TestNovaNotification(TestCase):
                 'deleted_at': deleted_at,
                 'instance_type': 'm1.nano',
                 'state': 'active',
-                'state_description': ''
+                'state_description': '',
+                'ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 4, 'v6_count': 4}
+                }
             }
         }
         values = utils.test_nova_xml_generator_values
@@ -337,7 +353,11 @@ class TestNotificationPayload(TestCase):
                      'deleted_at': '2012-09-15 09:51:11',
                      'instance_type': 'm1.nano',
                      'state': 'active',
-                     'state_description': ''
+                     'state_description': '',
+                     'ip_address_count': {
+                        'private': {'v4_count': 1, 'v6_count': 1},
+                        'public': {'v4': 4, 'v6': 4}
+                     }
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.start_time,
@@ -359,7 +379,11 @@ class TestNotificationPayload(TestCase):
                      'deleted_at': '2012-09-15 09:51:11',
                      'instance_type': 'm1.nano',
                      'state': 'active',
-                     'state_description': ''
+                     'state_description': '',
+                     'ip_address_count': {
+                        'private': {'v4_count': 1, 'v6_count': 1},
+                        'public': {'v4_count': 4, 'v6_count': 4}
+                     }
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(str(payload.end_time), '2012-09-15 09:51:11')
@@ -380,7 +404,11 @@ class TestNotificationPayload(TestCase):
                      'deleted_at': '',
                      'instance_type': 'm1.nano',
                      'state': 'active',
-                     'state_description': ''
+                     'state_description': '',
+                     'ip_address_count': {
+                       'private': {'v4_count': 1, 'v6_count': 1},
+                       'public': {'v4_count': 4, 'v6_count': 4}
+                     }
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time,
@@ -403,7 +431,11 @@ class TestNotificationPayload(TestCase):
                      'deleted_at': '',
                      'instance_type': 'm1.nano',
                      'state': 'active',
-                     'state_description': ''
+                     'state_description': '',
+                     'ip_address_count': {
+                        'private': {'v4_count': 1, 'v6_count': 1},
+                        'public': {'v4_count': 4, 'v6_count': 4}
+                     }
                     }
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time,

@@ -14,6 +14,8 @@ test_nova_xml_generator_values = {
     'flavor_id': 10,
     'flavor_name': "m1.nano",
     'status': "ACTIVE",
+    'ipv4_addrs_count': 3,
+    'ipv6_addrs_count': 4
 }
 
 test_glance_xml_generator_values = {
@@ -54,8 +56,8 @@ def verified_nova_message_in_cuf_format(values):
     """<nova:product version="1" serviceCode="CloudServersOpenStack" """
     """resourceType="%(resource_type)s" flavorId="%(flavor_id)s" flavorName="%(flavor_name)s" status="%(status)s" """
     """%(options_string)s """
-    """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"/>"""
-    """</event>""") % vals
+    """bandwidthIn="%(bandwidth_in)s" bandwidthOut="%(bandwidth_out)s"  additionalIpv4="%(ipv4_addrs_count)s" """
+    """additionalIpv6="%(ipv6_addrs_count)s"/></event>""") % vals
     return {'payload': cuf_xml}
 
 

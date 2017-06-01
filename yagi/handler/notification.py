@@ -16,7 +16,8 @@ nova_cuf_template = ("""<event xmlns="http://docs.rackspace.com/core/event" """
 """serviceCode="CloudServersOpenStack" resourceType="SERVER" flavorId"""
 """="%(flavor_id)s" flavorName="%(flavor_name)s" status="%(status)s" """
 """%(options_string)s bandwidthIn="%(bandwidth_in)s" """
-"""bandwidthOut="%(bandwidth_out)s"/></event>""")
+"""bandwidthOut="%(bandwidth_out)s"  additionalIpv4="%(ipv4_addrs_count)s" """
+"""additionalIpv6="%(ipv6_addrs_count)s"/></event>""")
 
 glance_cuf_template_per_image = ("""<event endTime="%(end_time)s" """
 """startTime="%(start_time)s" region="%(region)s" """
@@ -113,6 +114,9 @@ class Notification(BaseNotification):
         cuf_xml_values['status'] = payload.status
         cuf_xml_values['data_center'] = self.data_center
         cuf_xml_values['region'] = self.region
+        # Getting the counts of ip addresses
+        cuf_xml_values['ipv4_addrs_count'] = payload.ipv4_addrs - 1 if payload.ipv4_addrs > 0 else 0
+        cuf_xml_values['ipv6_addrs_count'] = payload.ipv6_addrs
         cuf_xml = nova_cuf_template % cuf_xml_values
         return cuf_xml
 
