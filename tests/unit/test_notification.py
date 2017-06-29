@@ -156,7 +156,7 @@ class TestNovaNotification(TestCase):
                 'instance_type': 'm1.nano',
                 'state': 'active',
                 'state_description': '',
-                'ip_address_count': {
+                'fixed_ip_address_count': {
                     'private': {'v4_count': 1, 'v6_count': 1},
                     'public': {'v4_count': 4, 'v6_count': 4}
                 }
@@ -203,7 +203,7 @@ class TestNovaNotification(TestCase):
                 'instance_type': 'm1.nano',
                 'state': 'active',
                 'state_description': '',
-                'ip_address_count': {
+                'fixed_ip_address_count': {
                     'private': {'v4_count': 1, 'v6_count': 1},
                     'public': {'v4_count': 4, 'v6_count': 4}
                 }
@@ -252,7 +252,7 @@ class TestNovaNotification(TestCase):
                 'instance_type': 'm1.nano',
                 'state': 'active',
                 'state_description': '',
-                'ip_address_count': {
+                'fixed_ip_address_count': {
                     'private': {'v4_count': 1, 'v6_count': 1},
                     'public': {'v4_count': 4, 'v6_count': 4}
                 }
@@ -301,7 +301,7 @@ class TestNovaNotification(TestCase):
                 'instance_type': 'm1.nano',
                 'state': 'active',
                 'state_description': '',
-                'ip_address_count': {
+                'fixed_ip_address_count': {
                     'private': {'v4_count': 1, 'v6_count': 1},
                     'public': {'v4_count': 4, 'v6_count': 4}
                 }
@@ -354,7 +354,7 @@ class TestNotificationPayload(TestCase):
                      'instance_type': 'm1.nano',
                      'state': 'active',
                      'state_description': '',
-                     'ip_address_count': {
+                     'fixed_ip_address_count': {
                         'private': {'v4_count': 1, 'v6_count': 1},
                         'public': {'v4': 4, 'v6': 4}
                      }
@@ -380,7 +380,7 @@ class TestNotificationPayload(TestCase):
                      'instance_type': 'm1.nano',
                      'state': 'active',
                      'state_description': '',
-                     'ip_address_count': {
+                     'fixed_ip_address_count': {
                         'private': {'v4_count': 1, 'v6_count': 1},
                         'public': {'v4_count': 4, 'v6_count': 4}
                      }
@@ -405,7 +405,7 @@ class TestNotificationPayload(TestCase):
                      'instance_type': 'm1.nano',
                      'state': 'active',
                      'state_description': '',
-                     'ip_address_count': {
+                     'fixed_ip_address_count': {
                        'private': {'v4_count': 1, 'v6_count': 1},
                        'public': {'v4_count': 4, 'v6_count': 4}
                      }
@@ -432,7 +432,7 @@ class TestNotificationPayload(TestCase):
                      'instance_type': 'm1.nano',
                      'state': 'active',
                      'state_description': '',
-                     'ip_address_count': {
+                     'fixed_ip_address_count': {
                         'private': {'v4_count': 1, 'v6_count': 1},
                         'public': {'v4_count': 4, 'v6_count': 4}
                      }
