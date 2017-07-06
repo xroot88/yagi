@@ -324,6 +324,59 @@ class TestNovaNotification(TestCase):
         self.assertEquals(expected_cuf_xml['payload'],
                           verified_message['payload'])
 
+    def test_shared_ip_counted(self):
+        audit_period_beginning = '2012-09-15 10:51:11'
+        audit_period_ending = '2012-09-16 10:51:11'
+        launched_at = '2012-09-15 11:51:11'
+        deleted_at = '2012-09-15 09:51:11'
+        exists_message = {
+            'event_type': 'test',
+            'message_id': 'some_uuid',
+            '_unique_id': 'e53d007a-fc23-11e1-975c-cfa6b29bb814',
+            'payload': {
+                'tenant_id':'2882',
+                'access_ip_v4': '5.79.20.138',
+                'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
+                'audit_period_beginning': audit_period_beginning,
+                'audit_period_ending': audit_period_ending,
+                'display_name': 'test',
+                'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
+                              'public': {'bw_in': 1001,'bw_out': 19992}},
+                'image_meta': {'com.rackspace__1__options': '1'},
+                'instance_id': '56',
+                'dummy_flavor_field_name': '10',
+                'launched_at': launched_at,
+                'deleted_at': deleted_at,
+                'instance_type': 'm1.nano',
+                'state': 'active',
+                'state_description': '',
+                'fixed_ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 2, 'v6_count': 1}
+                },
+                'shared_ip_address_count': {
+                    'private': {'v4_count': 1, 'v6_count': 1},
+                    'public': {'v4_count': 2, 'v6_count': 3}
+                }
+            }
+        }
+        values = utils.test_nova_xml_generator_values
+        values.update({'end_time': '2012-09-15T09:51:11Z'})
+        self.mox.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn('e53d007a-fc23-11e1-975c-cfa6b29bb814')
+        expected_cuf_xml = utils.verified_nova_message_in_cuf_format(
+            values)
+        notification = Notification(exists_message,
+                                    event_type=self.event_type,
+                                    region=self.region,
+                                    data_center=self.data_center)
+        self.mox.ReplayAll()
+        verified_message = notification.\
+            convert_to_verified_message_in_cuf_format()
+
+        self.assertEquals(expected_cuf_xml['payload'],
+                          verified_message['payload'])
+
 
 class TestNotificationPayload(TestCase):
 
@@ -440,4 +493,34 @@ class TestNotificationPayload(TestCase):
         payload = NotificationPayload(payload_json)
         self.assertEquals(payload.end_time,
                           datetime.datetime(2012, 9, 16, 10, 51, 11, 799674))
+
+    def test_shared_ip_in_payload(self):
+        payload_json ={'tenant_id':'2882',
+                     'access_ip_v4': '5.79.20.138',
+                     'access_ip_v6': '2a00:1a48:7804:0110:a8a0:fa07:ff08:157a',
+                     'audit_period_beginning': '2012-09-15 10:51:11',
+                     'audit_period_ending': '2012-09-16 10:51:11',
+                     'bandwidth': {'private': {'bw_in': 0, 'bw_out': 264902},
+                                   'public': {'bw_in': 1001,'bw_out': 19992}
+                                  },
+                     'image_meta': {'com.rackspace__1__options': '1'},
+                     'instance_id': '56',
+                     'dummy_flavor_field_name': '10',
+                     'launched_at': '2012-09-15 11:51:11',
+                     'deleted_at': '2012-09-15 09:51:11',
+                     'instance_type': 'm1.nano',
+                     'state': 'active',
+                     'state_description': '',
+                     'fixed_ip_address_count': {
+                        'private': {'v4_count': 1, 'v6_count': 1},
+                        'public': {'v4': 3, 'v6': 2}
+                     },
+                     'shared_ip_address_count': {
+                        'private': {'v4_count': 0, 'v6_count': 0},
+                        'public': {'v4': 1, 'v6': 2}
+                     }
+                    }
+        payload = NotificationPayload(payload_json)
+        self.assertEquals(1, payload.shared_ip_addrs['public']['v4'])
+        self.assertEquals(2, payload.shared_ip_addrs['public']['v6'])
 

@@ -133,10 +133,11 @@ class CufPubTests(unittest.TestCase):
         """resourceName="test" dataCenter="ORD1" region="PREPROD-ORD" """
         """tenantId="2882" startTime="2012-09-15T12:51:11Z" """
         """endTime="2012-09-16T11:51:11Z" type="USAGE"><nova:product """
-        """version="1" serviceCode="CloudServersOpenStack" resourceType"""
+        """version="2" serviceCode="CloudServersOpenStack" resourceType"""
         """="SERVER" flavorId="10" flavorName="m1.nano" status="ACTIVE" """
         """osLicenseType="RHEL" bandwidthIn="1001" bandwidthOut"""
-        """="19992"/></event></atom:content></atom:entry>""")
+        """="19992"  additionalIpv4="0" additionalIpv6="0"/>"""
+        """</event></atom:content></atom:entry>""")
 
         self.handler.handle_messages(messages, dict())
 

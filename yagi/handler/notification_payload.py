@@ -89,10 +89,18 @@ class NotificationPayload(object):
                                      self.audit_period_beginning)
         self.end_time = end_time(self.deleted_at, self.audit_period_ending)
         # For Additional IP billing purpose getting the list of fixed IP's
-        self.ip_addrs = payload_json.get('fixed_ip_address_count', {})
-        public_ip_counts = self.ip_addrs.get('public', {})
-        self.ipv4_addrs = public_ip_counts.get('v4_count', 0)
-        self.ipv6_addrs = public_ip_counts.get('v6_count', 0)
+        # and the list of shared IPs.
+        self.fixed_ip_addrs = payload_json.get('fixed_ip_address_count', {})
+        public_fixed_ip_counts = self.fixed_ip_addrs.get('public', {})
+
+        self.shared_ip_addrs = payload_json.get('shared_ip_address_count', {})
+        public_shared_ip_counts = self.shared_ip_addrs.get('public', {})
+
+        # Report the sum of shared and fixed IPs.
+        self.ipv4_addrs = public_shared_ip_counts.get('v4_count', 0) + \
+                public_fixed_ip_counts.get('v4_count', 0)
+        self.ipv6_addrs = public_shared_ip_counts.get('v6_count', 0) + \
+                public_fixed_ip_counts.get('v6_count', 0)
 
     def _get_status(self, task_state, vm_state):
         _STATE_MAP = {
